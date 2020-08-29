@@ -1,0 +1,9 @@
+# System
+i_clock_fps -1
+
+# Window
+i_width 1600
+i_height 900
+str_title ...
+i_xpos 150
+i_ypos 100

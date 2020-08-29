@@ -1,0 +1,5 @@
+- GUI Shader
+DIR Data\Shaders\GUI Shader\
+name GUI Shader
+vertex GUI shader.vert
+fragment GUI shader.frag

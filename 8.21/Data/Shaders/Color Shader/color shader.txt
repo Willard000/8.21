@@ -1,0 +1,5 @@
+- Color Shader
+DIR Data\Shaders\Color Shader\
+name Color Shader
+vertex color shader.vert
+fragment color shader.frag

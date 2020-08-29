@@ -1,0 +1,4 @@
+# Model
+DIR Data\Models\Tree\
+file tree.obj
+program 0
