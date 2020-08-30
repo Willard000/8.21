@@ -75,7 +75,6 @@ private:
 	glm::vec3 _up;
 
 	glm::mat4 _projection;
-	glm::mat4 _gui_projection;
 	glm::mat4 _view;
 
 	glm::vec3 _position;

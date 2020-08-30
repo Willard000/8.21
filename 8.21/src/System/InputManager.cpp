@@ -4,6 +4,7 @@
 #include "../src/Resources/Window.h"
 #include "../src/Resources/Camera.h"
 #include "../src/System/ResourceManager.h"
+#include "../src/System/GUIManager.h"
 
 #include "../src/Resources/Terrain.h"
 
@@ -12,6 +13,17 @@
 #include <cmath>
 
 constexpr float SCROLL_SPEED = 50000.0f;
+
+void select_tile() {
+	const auto terrain = Environment::get().get_resource_manager()->get_terrain();
+	const auto world_space = Environment::get().get_input_manager()->get_mouse_world_space_vector();
+	const auto camera = Environment::get().get_window()->get_camera();
+	const float y_diff = abs(camera->get_position().y / world_space.y);
+	const int tile_x = int((y_diff * world_space.x + camera->get_position().x) / terrain->get_tile_width());
+	const int tile_y = int((y_diff * world_space.z + camera->get_position().z) / terrain->get_tile_length());
+
+	terrain->select(tile_x, tile_y);
+}
 
 InputManager::InputManager() :
 	_xpos			( 0.0 ),
@@ -210,6 +222,8 @@ void EditorInputManager::update(bool* exit) {
 	if (glfwGetKey(window, GLFW_KEY_E)) {
 		camera->move(CAMERA_UP);
 	}
+
+	select_tile();
 }
 
 void EditorInputManager::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -249,16 +263,6 @@ void EditorInputManager::cursor_position_callback(GLFWwindow* window, double xpo
 	if (camera->get_mode() == CAMERA_FREE) {
 		camera->move_angle((float)xpos, (float)ypos);
 	}
-
-	const auto terrain = Environment::get().get_resource_manager()->get_terrain();
-	const auto world_space = Environment::get().get_input_manager()->get_mouse_world_space_vector();
-	const float y_diff = abs(camera->get_position().y / world_space.y);
-	//const int tile_x = int((y_diff * world_space.x + camera->get_position().x) / terrain->get_tile_width());
-	//const int tile_y = int((y_diff * world_space.z + camera->get_position().z) / terrain->get_tile_length());
-	const int tile_x = int((y_diff * world_space.x + camera->get_position().x));
-	const int tile_y = int((y_diff * world_space.z + camera->get_position().z));
-
-	terrain->select(tile_x, tile_y);
 }
 
 void EditorInputManager::mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
@@ -266,10 +270,16 @@ void EditorInputManager::mouse_button_callback(GLFWwindow* window, int button, i
 		return;
 	}
 
+	const bool GUI_selected = Environment::get().get_gui_manager()->selected();
+
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-		Environment::get().get_resource_manager()->get_terrain()->adjust_tile_height(1);
+		if (!GUI_selected) {
+			Environment::get().get_resource_manager()->get_terrain()->adjust_tile_height(1);
+		}
 	}
 	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
-		Environment::get().get_resource_manager()->get_terrain()->adjust_ramp_height();
+		if (!GUI_selected) {
+			Environment::get().get_resource_manager()->get_terrain()->adjust_ramp_height();
+		}
 	}
 }

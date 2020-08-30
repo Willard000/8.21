@@ -10,10 +10,12 @@ public:
 	GUIManager();
 	~GUIManager();
 
-	void add(std::shared_ptr<GUIElement> element);
+	void update();
+	void add(std::shared_ptr<GUIMaster> master);
 	void draw();
+	bool selected();
 private:
-	std::vector<std::shared_ptr<GUIElement>> _elements;
+	std::vector<std::shared_ptr<GUIMaster>> _masters;
 };
 
 #endif

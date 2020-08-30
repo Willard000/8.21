@@ -41,8 +41,10 @@ Editor::~Editor() {
 #include "../src/Resources/GUI.h"
 void Editor::run() {
 
-	auto ui_test = std::make_shared<GUIElement>(100, 100, glm::vec2(.1, .1), glm::vec4(1, 0, 1, .5));
-	_environment.get_gui_manager()->add(ui_test);
+	std::shared_ptr<GUISelectionGrid> ui_test = std::make_shared<GUISelectionGrid>(.1f, .2f, glm::vec2(.25f, .25f), glm::vec4(1, 0, 1, .5f));
+	std::shared_ptr<GUIMaster> ui_master = std::make_shared<GUIMaster>(.2f, .4f, glm::vec2(.1f, .1f), glm::vec4(1, 0, 0, .5f));
+	ui_master->add(ui_test);
+	_environment.get_gui_manager()->add((ui_master));
 
 	while (!_exit) {
 		_environment.get_clock()->update();
@@ -51,6 +53,7 @@ void Editor::run() {
 		render();
 
 		_environment.get_input_manager()->update(&_exit);
+		_environment.get_gui_manager()->update();
 	}
 
 }
