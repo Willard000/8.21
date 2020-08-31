@@ -57,18 +57,18 @@ public:
 	bool read     (double* val, const std::string_view key);
 	bool read	  (bool* val, const std::string_view key);
 
-	bool read	  (std::string* val, const int& key);
-	bool read	  (std::string_view* val, const int& key);
-	bool read	  (int* val, const int& key);
-	bool read     (unsigned int* val, const int& key);
-	bool read	  (float* val, const int& key);
-	bool read     (double* val, const int& key);
-	bool read	  (bool* val, const int& key);
+	bool read	  (std::string* val, const int key);
+	bool read	  (std::string_view* val, const int key);
+	bool read	  (int* val, const int key);
+	bool read     (unsigned int* val, const int key);
+	bool read	  (float* val, const int key);
+	bool read     (double* val, const int key);
+	bool read	  (bool* val, const int key);
 
 	// set section to read from using read_string, read_int ...
-	bool set_section(const std::string& section);
+	bool set_section(const std::string_view section);
 
-	int get_num_lines(const std::string& section);
+	int get_num_lines(const std::string_view section);
 
 	bool is_read();
 
@@ -88,10 +88,10 @@ private:
 	int _section_hash_val;
 	bool _read;
 
-	int _get_section_hash_val(const int& section_val);
-	int _new_section_hash_val(const int& section_val);
-	int _get_key_hash_val(const int& key_val, const int& section_hash_val = 0);
-	int _new_key_hash_val(const int& key_val, const int& section_hash_val = 0);
+	int _get_section_hash_val(const int section_val);
+	int _new_section_hash_val(const int section_val);
+	int _get_key_hash_val(const int key_val, const int section_hash_val = 0);
+	int _new_key_hash_val(const int key_val, const int section_hash_val = 0);
 
 	void _query_file(std::fstream& file);
 

@@ -244,12 +244,18 @@ void EditorInputManager::scroll_callback(GLFWwindow* window, double xoffset, dou
 	}
 
 	const auto camera = Environment::get().get_window()->get_camera();
+	const bool GUI_selected = Environment::get().get_gui_manager()->selected();
 
-	if (yoffset < 0) {
-		camera->move(CAMERA_UP, SCROLL_SPEED);
+	if (GUI_selected) {
+		Environment::get().get_gui_manager()->scroll(yoffset);
 	}
-	if (yoffset > 0) {
-		camera->move(CAMERA_DOWN, SCROLL_SPEED);
+	else {
+		if (yoffset < 0) {
+			camera->move(CAMERA_UP, SCROLL_SPEED);
+		}
+		if (yoffset > 0) {
+			camera->move(CAMERA_DOWN, SCROLL_SPEED);
+		}
 	}
 }
 
@@ -259,6 +265,7 @@ void EditorInputManager::cursor_position_callback(GLFWwindow* window, double xpo
 	}
 
 	const auto camera = Environment::get().get_window()->get_camera();
+
 
 	if (camera->get_mode() == CAMERA_FREE) {
 		camera->move_angle((float)xpos, (float)ypos);

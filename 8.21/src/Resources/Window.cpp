@@ -42,7 +42,7 @@ Window::Window(const ReadWindowFile window_file) :
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 
-	_camera = std::make_shared<Camera>(&_width, &_height, 90.0f, 1.0f, 0.1f, 1000.0f, 3.14f, 0.0f, glm::vec3(0.0f, 1.0f, 5.0f));
+	_camera = std::make_shared<Camera>(&_width, &_height, 90.0f, 1.0f, 0.01f, 1000.0f, 3.14f, 0.0f, glm::vec3(0.0f, 1.0f, 5.0f));
 
 	glfwSetWindowSizeCallback(_window, window_size_callback);
 }

@@ -14,6 +14,7 @@ public:
 	void add(std::shared_ptr<GUIMaster> master);
 	void draw();
 	bool selected();
+	void scroll(double yoffset);
 private:
 	std::vector<std::shared_ptr<GUIMaster>> _masters;
 };

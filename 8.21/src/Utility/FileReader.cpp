@@ -291,7 +291,7 @@ bool FileReader::read(bool* val, const std::string_view key) {
 	return true;
 }
 
-bool FileReader::read(std::string* val, const int& key) {
+bool FileReader::read(std::string* val, const int key) {
 	if (!_read) {
 		return false;
 	}
@@ -303,7 +303,7 @@ bool FileReader::read(std::string* val, const int& key) {
 	return true;
 }
 
-bool FileReader::read(std::string_view* val, const int& key) {
+bool FileReader::read(std::string_view* val, const int key) {
 	if (!_read) {
 		return false;
 	}
@@ -315,7 +315,7 @@ bool FileReader::read(std::string_view* val, const int& key) {
 	return true;
 }
 
-bool FileReader::read(int* val, const int& key) {
+bool FileReader::read(int* val, const int key) {
 	if (!_read) {
 		return false;
 	}
@@ -329,7 +329,7 @@ bool FileReader::read(int* val, const int& key) {
 	return true;
 }
 
-bool FileReader::read(unsigned int* val, const int& key) {
+bool FileReader::read(unsigned int* val, const int key) {
 	if (!_read) {
 		return false;
 	}
@@ -343,7 +343,7 @@ bool FileReader::read(unsigned int* val, const int& key) {
 	return true;
 }
 
-bool FileReader::read(float* val, const int& key) {
+bool FileReader::read(float* val, const int key) {
 	if (!_read) {
 		return false;
 	}
@@ -357,7 +357,7 @@ bool FileReader::read(float* val, const int& key) {
 	return true;
 }
 
-bool FileReader::read(double* val, const int& key) {
+bool FileReader::read(double* val, const int key) {
 	if (!_read) {
 		return false;
 	}
@@ -371,7 +371,7 @@ bool FileReader::read(double* val, const int& key) {
 	return true;
 }
 
-bool FileReader::read(bool* val, const int& key){
+bool FileReader::read(bool* val, const int key){
 	int int_val;
 
 	if(!read(&int_val, key)) {
@@ -383,7 +383,7 @@ bool FileReader::read(bool* val, const int& key){
 	return true;
 }
 
-bool FileReader::set_section(const std::string& section) {
+bool FileReader::set_section(const std::string_view section) {
 	if (!_read) {
 		return false;
 	}
@@ -397,7 +397,7 @@ bool FileReader::set_section(const std::string& section) {
 	return true;
 }
 
-int FileReader::_get_section_hash_val(const int& section_val) {
+int FileReader::_get_section_hash_val(const int section_val) {
 	int hash_val = section_val % _data.capacity();
 	const int start_val = hash_val;
 
@@ -412,7 +412,7 @@ int FileReader::_get_section_hash_val(const int& section_val) {
 	return hash_val;
 }
 
-int FileReader::get_num_lines(const std::string& section) {
+int FileReader::get_num_lines(const std::string_view section) {
 	if(!_read) {
 		return -1;
 	}
@@ -429,7 +429,7 @@ bool FileReader::is_read() {
 	return _read;
 }
 
-int FileReader::_new_section_hash_val(const int& section_val) {
+int FileReader::_new_section_hash_val(const int section_val) {
 	int hash_val = section_val % _data.capacity();
 	const int start_val = hash_val;
 
@@ -444,7 +444,7 @@ int FileReader::_new_section_hash_val(const int& section_val) {
 	return hash_val;
 }
 
-int FileReader::_get_key_hash_val(const int& key_val, const int& section_hash_val) {
+int FileReader::_get_key_hash_val(const int key_val, const int section_hash_val) {
 	if (_data[section_hash_val].table.empty()) {
 		return -1;
 	}
@@ -463,7 +463,7 @@ int FileReader::_get_key_hash_val(const int& key_val, const int& section_hash_va
 	return hash_val;
 }
 
-int FileReader::_new_key_hash_val(const int& key_val, const int& section_hash_val) {
+int FileReader::_new_key_hash_val(const int key_val, const int section_hash_val) {
 	if (_data[section_hash_val].table.empty()) {
 		return -1;
 	}

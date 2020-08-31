@@ -10,9 +10,7 @@ GUIManager::~GUIManager() {
 
 void GUIManager::update() {
 	for(const auto master : _masters) {
-		if (master) {
-			master->update();
-		}
+		master->update();
 	}
 }
 
@@ -22,17 +20,23 @@ void GUIManager::add(std::shared_ptr<GUIMaster> master) {
 
 void GUIManager::draw() {
 	for(const auto master : _masters) {
-		if (master) {
-			master->draw(GL_TRIANGLES);
-		}
+		master->draw(GL_TRIANGLES);
 	}	
 }
 
 bool GUIManager::selected() {
 	for(const auto master : _masters) {
-		if(master && master->selected()) {
+		if(master->selected()) {
 			return true;
 		}
 	}
 	return false;
+}
+
+void GUIManager::scroll(double yoffset) {
+	for(const auto master : _masters) {
+		if(master->selected()) {
+			master->scroll(yoffset);
+		}
+	}
 }
