@@ -39,6 +39,7 @@ Editor::~Editor() {
 }
 
 #include "../src/Resources/GUI.h"
+#include "../src/Resources/GUIText.h"
 void Editor::run() {
 
 	std::shared_ptr<GUISelectionGrid> ui_test = std::make_shared<GUISelectionGrid>(.2f, .2f, glm::vec2(.0f, .0f), glm::vec4(1, 0, 1, .5f));
@@ -69,6 +70,10 @@ void Editor::render() {
 	_environment.get_resource_manager()->draw();
 
 	_environment.get_gui_manager()->draw();
+
+	static GUITextDrawElement text;
+	static GUITextDrawDesc draw_desc('A', glm::vec4(0, 1, 1, 0.5), 0.2f, glm::vec2(0.5f, 0.5f));
+	text.draw(GL_TRIANGLES, draw_desc);
 
 	glfwSwapBuffers(_environment.get_window()->get_glfw_window());
 }

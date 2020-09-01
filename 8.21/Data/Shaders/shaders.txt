@@ -2,3 +2,4 @@
 0 Data\Shaders\Basic Shader\basic shader.txt
 1 Data\Shaders\Terrain Shader\terrain shader.txt
 2 Data\Shaders\GUI Shader\GUI shader.txt
+3 Data\Shaders\Text Shader\text shader.txt

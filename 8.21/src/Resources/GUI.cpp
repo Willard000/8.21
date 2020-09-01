@@ -5,12 +5,9 @@
 #include "../src/System/ResourceManager.h"
 #include "../src/Resources/Program.h"
 #include "../src/Resources/Window.h"
-
 #include <GL/gl3w.h>
 
 #define GUI_SHADER 2
-
-const glm::mat4 GUI_PROJECTION = glm::ortho(0, 1, 0, 1);
 
 GUIPositionElement::GUIPositionElement() :
 	_width			( 0.0f ),
@@ -27,23 +24,11 @@ GUIPositionElement::GUIPositionElement(float width, float height, glm::vec2 posi
 	_color			( color )
 {}
 
-GUIViewPort::GUIViewPort() :
-	_position(glm::vec2(0, 0)),
-	_width(0.0f),
-	_height(0.0f)
-{}
-
-GUIViewPort::GUIViewPort(float width, float height) :
-	_position(glm::vec2(0, 0)),
-	_width(width),
-	_height(height)
-{}
-
-glm::vec4 GUIViewPort::get_viewport() {
+glm::vec4 GUIPositionElement::screen_space() {
 	const float window_width = (float)Environment::get().get_window()->get_width();
 	const float window_height = (float)Environment::get().get_window()->get_height();
-	return { (_position.x + GUIPositionElement::_position.x) * window_width,
-			 (_position.y + GUIPositionElement::_position.y) * window_height,
+	return { _position.x * window_width,
+			 _position.y * window_height,
 			 _width * window_width,
 			 _height * window_height
 	};
@@ -69,7 +54,7 @@ void GUIDrawElement::draw(GUIDrawDesc draw_desc) {
 	glBindVertexArray(_vao);
 	glUseProgram(_program);
 
-	glUniform4fv(glGetUniformLocation(_program, "viewport"), 1, &draw_desc._viewport[0]);
+	glUniform4fv(glGetUniformLocation(_program, "screen_space"), 1, &draw_desc._screen_space[0]);
 	glUniform4fv(glGetUniformLocation(_program, "color"), 1, &_color[0]);
 	glUniform2fv(glGetUniformLocation(_program, "position"), 1, &get_draw_position(draw_desc)[0]);
 
@@ -193,7 +178,7 @@ void GUIScrollElement::draw(GUIDrawDesc draw_desc) {
 	glBindVertexArray(_vao);
 	glUseProgram(_program);
 
-	glUniform4fv(glGetUniformLocation(_program, "viewport"), 1, &draw_desc._viewport[0]);
+	glUniform4fv(glGetUniformLocation(_program, "viewport"), 1, &draw_desc._screen_space[0]);
 	glUniform4fv(glGetUniformLocation(_program, "color"), 1, &_color[0]);
 	glUniform2fv(glGetUniformLocation(_program, "position"), 1, &get_draw_position(draw_desc)[0]);
 
@@ -215,8 +200,11 @@ glm::vec2 GUIScrollElement::get_draw_position(GUIDrawDesc draw_desc) {
 }
 
 void GUIScrollElement::scroll(double yoffset) {
-	_scroll -= (float)yoffset / 100.0f;
-	_scroll = std::clamp(_scroll, 0.0f, _max_scroll - GUIPositionElement::_height);
+	const float max = _max_scroll - GUIPositionElement::_height;
+	if (max > 0) {
+		_scroll -= (float)yoffset / 100.0f;
+		_scroll = std::clamp(_scroll, 0.0f, max);
+	}
 }
 
 GUISelectionGrid::GUISelectionGrid(float width, float height, glm::vec2 position, glm::vec4 color) :
@@ -237,7 +225,6 @@ bool GUISelectionGrid::selected() {
 
 GUIMaster::GUIMaster(float width, float height, glm::vec2 position, glm::vec4 color) :
 	GUIPositionElement		( width, height, position, color ),
-	GUIViewPort				( width, height ),
 	GUIScrollElement		( glm::vec4(color.r, color.g, color.b, color.a + .2) )
 {}
 
@@ -259,9 +246,9 @@ void GUIMaster::add(std::shared_ptr<GUIElement> element) {
 }
 
 void GUIMaster::draw(int mode) {
-	const auto viewport = get_viewport();
-    GUIDrawDesc const master_draw_desc(mode, viewport);
-	GUIDrawDesc element_draw_desc(mode, viewport, GUIPositionElement::_width, GUIPositionElement::_height, GUIPositionElement::_position, true, _scroll);
+	const auto screen_space = GUIPositionElement::screen_space();
+    GUIDrawDesc const master_draw_desc(mode, screen_space);
+	GUIDrawDesc element_draw_desc(mode, screen_space, GUIPositionElement::_width, GUIPositionElement::_height, GUIPositionElement::_position, true, _scroll);
 
 	GUIDrawElement::draw(master_draw_desc);
 
@@ -270,7 +257,9 @@ void GUIMaster::draw(int mode) {
 		element_draw_desc._ypos -= std::dynamic_pointer_cast<GUIPositionElement>(element)->_height;
 	}
 
-	GUIScrollElement::draw(element_draw_desc);
+	if (_max_scroll - GUIPositionElement::_height > 0) {
+		GUIScrollElement::draw(element_draw_desc);
+	}
 }
 
 bool GUIMaster::selected() {

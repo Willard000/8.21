@@ -3,11 +3,11 @@
 layout (location = 0) out vec4 f_color;
 
 uniform vec4 color;
-uniform vec4 viewport;
+uniform vec4 screen_space;
 
 void main() {
-	if(gl_FragCoord.y < viewport.y || gl_FragCoord.y > viewport.y + viewport.w ||
- 	   gl_FragCoord.x < viewport.x || gl_FragCoord.x > viewport.x + viewport.z) {
+	if(gl_FragCoord.y < screen_space.y || gl_FragCoord.y > screen_space.y + screen_space.w ||
+ 	   gl_FragCoord.x < screen_space.x || gl_FragCoord.x > screen_space.x + screen_space.z) {
 		discard;
 	}
 

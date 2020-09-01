@@ -8,10 +8,12 @@
 
 typedef unsigned int GLuint;
 
+const glm::mat4 GUI_PROJECTION = glm::ortho(0, 1, 0, 1);
+
 struct GUIDrawDesc {
-	GUIDrawDesc(int mode = 4, glm::vec4 viewport = glm::vec4(0, 0, 0, 0), float master_width = 0.0f, float master_height = 0.0f, glm::vec2 master_position = glm::vec2(0, 0), bool has_master = false, float scroll = 0.0f) :
+	GUIDrawDesc(int mode = 4, glm::vec4 screen_space = glm::vec4(0, 0, 0, 0), float master_width = 0.0f, float master_height = 0.0f, glm::vec2 master_position = glm::vec2(0, 0), bool has_master = false, float scroll = 0.0f) :
 		_mode					( mode ),
-		_viewport				( viewport ),
+		_screen_space			( screen_space ),
 		_master_width			( master_width ),
 		_master_height			( master_height ),
 		_master_position		( master_position ),
@@ -21,7 +23,7 @@ struct GUIDrawDesc {
 	{}
 
 	int		  _mode;
-	glm::vec4 _viewport;
+	glm::vec4 _screen_space;
 	float	  _master_width;
 	float	  _master_height;
 	glm::vec2 _master_position;
@@ -46,9 +48,6 @@ struct GUISelectDesc {
 	float		_scroll;
 };
 
-class GUIViewPort;
-class GUIMaster;  
-
 class GUIElement {
 public:
 	virtual void select(GUISelectDesc select_desc = GUISelectDesc()) = 0;
@@ -62,22 +61,12 @@ public:
 	GUIPositionElement();
 	GUIPositionElement(float width, float height, glm::vec2 position, glm::vec4 color);
 
+	glm::vec4 screen_space();
+
 	float _width;
 	float _height;
 	glm::vec2 _position;
 	glm::vec4 _color;
-};
-
-class GUIViewPort : virtual public GUIPositionElement {
-public:
-	GUIViewPort();
-	GUIViewPort(float width, float height);
-
-	glm::vec4 get_viewport();
-protected:
-	glm::vec2 _position;
-	float _width;
-	float _height;
 };
 
 class GUIDrawElement : virtual public GUIPositionElement {
@@ -149,7 +138,7 @@ public:
 private:
 };
 
-class GUIMaster : public GUIViewPort, virtual public GUIDrawElement, virtual public GUISelectElement, virtual public GUIScrollElement {
+class GUIMaster : virtual public GUIDrawElement, virtual public GUISelectElement, virtual public GUIScrollElement {
 public:
 	GUIMaster(float width, float height, glm::vec2 position, glm::vec4 color);
 

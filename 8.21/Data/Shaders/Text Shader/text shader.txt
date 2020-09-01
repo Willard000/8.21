@@ -1,0 +1,5 @@
+- Text Shader
+DIR Data\Shaders\Text Shader\
+name Text Shader
+vertex text shader.vert
+fragment text shader.frag

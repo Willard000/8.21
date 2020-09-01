@@ -285,14 +285,10 @@ void Terrain::create_vao() {
 	glNamedBufferStorage(_height_buffer, sizeof(GLfloat) * 4 * _height_map.size(), &_height_map[0], GL_DYNAMIC_STORAGE_BIT);
 
 	glCreateTextures(GL_TEXTURE_BUFFER, 1, &_height_texture);
+	glTextureBuffer(_height_texture, GL_R32F, _height_buffer);
 
 	glUniform1i(glGetUniformLocation(_program, "height"), 0);
 	glUniform1i(glGetUniformLocation(_program, "tile_texture"), 1);
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_BUFFER, _height_texture);
-	glTextureBuffer(_height_texture, GL_R32F, _height_buffer);
-	glBindTextureUnit(GL_TEXTURE0, _height_buffer);
 
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, _tile_texture.id);
@@ -301,6 +297,13 @@ void Terrain::create_vao() {
 void Terrain::draw(int mode) {
 	glBindVertexArray(_vao);
 	glUseProgram(_program);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_BUFFER, _height_texture);
+	glBindTextureUnit(GL_TEXTURE0, _height_buffer);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, _tile_texture.id);
 
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);

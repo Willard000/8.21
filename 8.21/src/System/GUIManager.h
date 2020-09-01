@@ -2,6 +2,7 @@
 #define GUI_MANAGER_H
 
 #include "../src/Resources/GUI.h"
+#include "../src/Resources/GUIText.h"
 
 #include <memory>
 
