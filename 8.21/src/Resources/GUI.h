@@ -5,53 +5,37 @@
 
 #include <vector>
 #include <memory>
+#include <string>
 
 typedef unsigned int GLuint;
 
 const glm::mat4 GUI_PROJECTION = glm::ortho(0, 1, 0, 1);
 
 struct GUIDrawDesc {
-	GUIDrawDesc(int mode = 4, glm::vec4 screen_space = glm::vec4(0, 0, 0, 0), float master_width = 0.0f, float master_height = 0.0f, glm::vec2 master_position = glm::vec2(0, 0), bool has_master = false, float scroll = 0.0f) :
-		_mode					( mode ),
-		_screen_space			( screen_space ),
-		_master_width			( master_width ),
-		_master_height			( master_height ),
-		_master_position		( master_position ),
-		_has_master				( has_master ),
-		_ypos					( master_position.y ),
-		_scroll					( scroll )
-	{}
-
-	int		  _mode;
-	glm::vec4 _screen_space;
-	float	  _master_width;
-	float	  _master_height;
-	glm::vec2 _master_position;
-	bool	  _has_master;
-	float	  _ypos;
-	float	  _scroll;
+	int		  _mode = 4;
 };
 
-struct GUISelectDesc {
-	GUISelectDesc(float master_width = 0.0f, float master_height = 0.0f, glm::vec2 master_position = glm::vec2(0, 0), float scroll = 0.0f) :
-		_master_width			( master_width ),
-		_master_height			( master_height ),
-		_master_position		( master_position ),
-		_ypos					( master_position.y ),
-		_scroll					( scroll )
-	{}
+struct GUIMasterDesc {
+	glm::vec4 _screen_space = glm::vec4(0, 0, 0, 0);
+	float     _width = 0.0f;
+	float	  _height = 0.0f;
+	glm::vec2 _position = glm::vec2(0, 0);
+	float	  _ypos = 0.0f;
+	float	  _scroll = 0.f;
+};
 
-	float		_master_width;
-	float		_master_height;
-	glm::vec2   _master_position;
-	float		_ypos;
-	float		_scroll;
+struct GUITextDesc {
+	std::string _string;
+	glm::vec4 _color = glm::vec4(1, 1, 1, 1);
+	float _scale = 0.15f;
+	glm::vec2 _position = glm::vec2(0, 0);
+	int _mode = 4;
 };
 
 class GUIElement {
 public:
-	virtual void select(GUISelectDesc select_desc = GUISelectDesc()) = 0;
-	virtual void draw(GUIDrawDesc draw_desc = GUIDrawDesc()) = 0;
+	virtual void select(GUIMasterDesc master_desc = GUIMasterDesc()) = 0;
+	virtual void draw(GUIDrawDesc draw_desc = GUIDrawDesc(), GUIMasterDesc master_desc = GUIMasterDesc()) = 0;
 	virtual bool selected() = 0;
 };
 
@@ -75,8 +59,7 @@ public:
 	GUIDrawElement(float width, float height, glm::vec2 position, glm::vec4 color);
 	~GUIDrawElement();
 
-	void draw(GUIDrawDesc draw_desc = GUIDrawDesc());
-	glm::vec2 get_draw_position(GUIDrawDesc draw_desc);
+	void draw(GUIDrawDesc draw_desc = GUIDrawDesc(), GUIMasterDesc master_desc = GUIMasterDesc());
 private:
 	void generate_vertex_data();
 	void create_vao();
@@ -93,7 +76,7 @@ public:
 	GUISelectElement();
 	GUISelectElement(float width, float height, glm::vec2 position, glm::vec4 color);
 
-	void select(GUISelectDesc select_desc = GUISelectDesc());
+	void select(GUIMasterDesc master_desc = GUIMasterDesc());
 	bool selected();
 private:
 	float _mouse_x;
@@ -108,8 +91,7 @@ public:
 
 	void scroll(double yoffset);
 
-	void draw(GUIDrawDesc draw_desc);
-	glm::vec2 get_draw_position(GUIDrawDesc draw_desc);
+	void draw(GUIDrawDesc draw_desc, GUIMasterDesc master_desc);
 protected:
 	float _scroll;
 	float _max_scroll;
@@ -128,14 +110,31 @@ private:
 	std::vector<glm::vec2> _vertex_data;
 };
 
+class GUIDrawText {
+public:
+	GUIDrawText();
+
+	void draw(GUITextDesc text_desc, GUIMasterDesc master_desc);
+private:
+	void create_vao();
+	void load_font_atlas();
+
+	GLuint _vao;
+	GLuint _program;
+	GLuint _vertex_buffer;
+
+	GLuint _font_atlas;
+};
+
 class GUISelectionGrid : virtual public GUIElement, public GUIDrawElement, public GUISelectElement {
 public:
 	GUISelectionGrid(float width, float height, glm::vec2 position, glm::vec4 color);
 
-	virtual void select(GUISelectDesc select_desc = GUISelectDesc());
-	virtual void draw(GUIDrawDesc draw_desc = GUIDrawDesc());
+	virtual void select(GUIMasterDesc master_desc = GUIMasterDesc());
+	virtual void draw(GUIDrawDesc draw_desc = GUIDrawDesc(), GUIMasterDesc master_desc = GUIMasterDesc());
 	virtual bool selected();
 private:
+	GUITextDesc _title;
 };
 
 class GUIMaster : virtual public GUIDrawElement, virtual public GUISelectElement, virtual public GUIScrollElement {

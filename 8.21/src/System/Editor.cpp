@@ -71,9 +71,5 @@ void Editor::render() {
 
 	_environment.get_gui_manager()->draw();
 
-	static GUITextDrawElement text;
-	static GUITextDrawDesc draw_desc('A', glm::vec4(0, 1, 1, 0.5), 0.2f, glm::vec2(0.5f, 0.5f));
-	text.draw(GL_TRIANGLES, draw_desc);
-
 	glfwSwapBuffers(_environment.get_window()->get_glfw_window());
 }

@@ -108,9 +108,6 @@
     <ClCompile Include="src\System\GUIManager.cpp">
       <Filter>Source Files\System</Filter>
     </ClCompile>
-    <ClCompile Include="src\Resources\GUIText.cpp">
-      <Filter>Source Files\Resources</Filter>
-    </ClCompile>
     <ClCompile Include="src\Resources\FontMap.cpp">
       <Filter>Source Files\Resources</Filter>
     </ClCompile>
@@ -178,9 +175,6 @@
     </ClInclude>
     <ClInclude Include="src\System\GUIManager.h">
       <Filter>Header Files\System</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Resources\GUIText.h">
-      <Filter>Header Files\Resources</Filter>
     </ClInclude>
     <ClInclude Include="src\Resources\FontMap.h">
       <Filter>Header Files\Resources</Filter>

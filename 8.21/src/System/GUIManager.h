@@ -16,8 +16,12 @@ public:
 	void draw();
 	bool selected();
 	void scroll(double yoffset);
+
+	void draw_text(GUITextDesc text_desc, GUIMasterDesc master_desc);
 private:
 	std::vector<std::shared_ptr<GUIMaster>> _masters;
+
+	GUIDrawText _draw_text;
 };
 
 #endif
