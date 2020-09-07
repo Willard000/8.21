@@ -27,16 +27,9 @@ struct ReadProgramFile {
 };
 
 struct Program {
-	Program() :
-		_key			( -1 ),
-		_id				( 0 )
-	{}
-
-	Program(int key, const char* file_path) :
-		_key			( key )
-	{
-		load_from_file(file_path);
-	}
+	Program();
+	Program(int key, const char* file_path);
+	~Program();
 
 	int			 _key;
 	std::string  _name;

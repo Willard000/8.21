@@ -18,6 +18,7 @@ struct GUIIconDesc {
 class GUIDrawIcon {
 public:
 	GUIDrawIcon();
+	~GUIDrawIcon();
 
 	void draw(GUIIconDesc icon_desc);
 private:
@@ -36,23 +37,9 @@ struct ReadIconFile {
 };
 
 struct GUIIcon {
-	GUIIcon() :
-		_key	     ( -1 ),
-		_id			 ( -1 )
-	{}
-
-	GUIIcon(int id, std::string type, std::shared_ptr<Texture> texture) :
-		_key		 ( -1 ),
-		_id			 ( id ),
-		_type		 ( type ),
-		_texture	 ( texture )
-	{}
-
-	GUIIcon(int key, const char* file_path) :
-		_key		( key )
-	{
-		load_from_file(file_path);
-	}
+	GUIIcon();
+	GUIIcon(int id, std::string type, std::shared_ptr<Texture> texture);
+	GUIIcon(int key, const char* file_path);
 
 	int						 _key;
 	int						 _id;  //Entity ID

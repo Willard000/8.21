@@ -14,17 +14,9 @@ struct ReadTextureFile {
 };
 
 struct Texture {
-	Texture() :
-		_key		( -1 ),
-		_id			( 0 ),
-		_type		( "" )
-	{}
-
-	Texture(int key, const char* file_path) :
-		_key		( key )
-	{
-		load_from_file(file_path);
-	}
+	Texture();
+	Texture(int key, const char* file_path);
+	~Texture();
 
 	int _key;
 	GLuint _id;

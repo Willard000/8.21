@@ -100,3 +100,18 @@ GLuint load_shaders(const ShaderInfo* program) {
 
 	return program_id;
 }
+
+Program::Program() :
+	_key		( -1 ),
+	_id			( 0 )
+{}
+
+Program::Program(int key, const char* file_path) :
+	_key		( key )
+{
+	load_from_file(file_path);
+}
+
+Program::~Program() {
+	glDeleteProgram(_id);
+}

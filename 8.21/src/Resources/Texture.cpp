@@ -15,6 +15,22 @@ ReadTextureFile::ReadTextureFile(const char* file_path)
 	file.read(&_texture, "texture");
 }
 
+Texture::Texture() :
+	_key			( -1 ),
+	_id				( 0 ),
+	_type			( "" )
+{}
+
+Texture::Texture(int key, const char* file_path) :
+	_key			( key )
+{
+	load_from_file(file_path);
+}
+
+Texture::~Texture() {
+	glDeleteTextures(1, &_id);
+}
+
 void Texture::load_from_file(const char* file_path) {
 	ReadTextureFile texture_file(file_path);
 

@@ -17,6 +17,11 @@ GUIDrawIcon::GUIDrawIcon() {
 	create_vao();
 }
 
+GUIDrawIcon::~GUIDrawIcon() {
+	glDeleteVertexArrays(1, &_vao);
+	glDeleteBuffers(1, &_vertex_buffer);
+}
+
 void GUIDrawIcon::create_vao() {
 	glCreateVertexArrays(1, &_vao);
 	glBindVertexArray(_vao);
@@ -52,6 +57,24 @@ ReadIconFile::ReadIconFile(const char* file_path) {
 	file.set_section("Icon");
 	file.read(&_id, "id");
 	file.read(&_type, "type");
+}
+
+GUIIcon::GUIIcon() :
+	_key			( -1 ),
+	_id				( -1 )
+{}
+
+GUIIcon::GUIIcon(int id, std::string type, std::shared_ptr<Texture> texture) :
+	_key			( -1 ),
+	_id				( id ),
+	_type			( type ),
+	_texture		( texture )
+{}
+
+GUIIcon::GUIIcon(int key, const char* file_path) :
+	_key			( key )
+{
+	load_from_file(file_path);
 }
 
 void GUIIcon::load_from_file(const char* file_path) {
