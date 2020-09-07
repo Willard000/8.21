@@ -18,6 +18,7 @@ public:
 		const std::vector<glm::vec3>& normals,
 		const std::vector<unsigned short>& indices
 	);
+	~Mesh();
 
 	void load_buffers();
 	void update_buffers();

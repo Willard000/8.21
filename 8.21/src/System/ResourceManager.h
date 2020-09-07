@@ -8,6 +8,8 @@
 
 #include <memory>
 
+struct GUIIcon;
+struct Texture;
 struct Program;
 class Model;
 class Terrain;
@@ -40,14 +42,30 @@ protected:
 private:
 };
 
+class TextureManager {
+public:
+	TextureManager();
+	~TextureManager();
+	
+	std::shared_ptr<Texture> get_texture(int key);
+	std::shared_ptr<GUIIcon> get_icon(int key);
+protected:
+	void load_textures();
+	bool load_texture(int key, std::string_view file_path);
+	bool load_icon(int key, std::string_view file_path);
+private:
+	std::map<int, std::shared_ptr<Texture>> _textures;
+	std::map<int, std::shared_ptr<GUIIcon>> _icons;
+};
+
 class ModelManager {
 public:
 	ModelManager();
 	~ModelManager();
 
+protected:
 	void load_models();
 	bool load_model(int id, std::string_view file_path);
-protected:
 	std::map<int, std::shared_ptr<Model>> _models;
 private:
 };
@@ -66,11 +84,10 @@ protected:
 private:
 };
 
-class ResourceManager : public ProgramManager, public ModelManager, public MapManager, public EntityManager{
+class ResourceManager : public ProgramManager, public TextureManager, public ModelManager, public MapManager, public EntityManager {
 public:
 	ResourceManager();
 	~ResourceManager();
-
 
 	void load_resources();
 	void draw();

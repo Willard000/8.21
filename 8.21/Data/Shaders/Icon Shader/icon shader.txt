@@ -1,0 +1,5 @@
+- Icon Shader
+DIR Data\Shaders\Icon Shader\
+name Icon Shader
+vertex icon shader.vert
+fragment icon shader.frag

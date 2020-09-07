@@ -18,10 +18,12 @@ public:
 	void scroll(double yoffset);
 
 	void draw_text(GUITextDesc text_desc, GUIMasterDesc master_desc);
+	void draw_icon(GUIIconDesc icon_desc);
 private:
 	std::vector<std::shared_ptr<GUIMaster>> _masters;
 
 	GUIDrawText _draw_text;
+	GUIDrawIcon _draw_icon;
 };
 
 #endif

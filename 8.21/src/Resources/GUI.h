@@ -7,6 +7,8 @@
 #include <memory>
 #include <string>
 
+#include "../src/Resources/Icon.h"
+
 typedef unsigned int GLuint;
 
 const glm::mat4 GUI_PROJECTION = glm::ortho(0, 1, 0, 1);
@@ -21,7 +23,8 @@ struct GUIMasterDesc {
 	float	  _height = 0.0f;
 	glm::vec2 _position = glm::vec2(0, 0);
 	float	  _ypos = 0.0f;
-	float	  _scroll = 0.f;
+	float	  _scroll = 0.0f;
+	float	  _sub_height = 0.0f;
 };
 
 struct GUITextDesc {
@@ -113,6 +116,7 @@ private:
 class GUIDrawText {
 public:
 	GUIDrawText();
+	~GUIDrawText();
 
 	void draw(GUITextDesc text_desc, GUIMasterDesc master_desc);
 private:
@@ -133,8 +137,12 @@ public:
 	virtual void select(GUIMasterDesc master_desc = GUIMasterDesc());
 	virtual void draw(GUIDrawDesc draw_desc = GUIDrawDesc(), GUIMasterDesc master_desc = GUIMasterDesc());
 	virtual bool selected();
+
+	void add(std::shared_ptr<GUIIcon> icon);
 private:
 	GUITextDesc _title;
+
+	std::vector<std::shared_ptr<GUIIcon>> _icons;
 };
 
 class GUIMaster : virtual public GUIDrawElement, virtual public GUISelectElement, virtual public GUIScrollElement {

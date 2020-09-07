@@ -84,13 +84,13 @@ void load_material_textures(std::vector<Texture>& textures, aiMaterial* material
 		std::cout << "Texture Path: " << path << '\n';
 
 		Texture texture;
-		texture.id = SOIL_load_OGL_texture(path.c_str(), SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
-		if (texture.id == 0) {
+		texture._id = SOIL_load_OGL_texture(path.c_str(), SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
+		if (texture._id == 0) {
 			std::cout << SOIL_last_result() << '\n';
 		}
 
-		std::cout << "id: " << texture.id << '\n';
-		texture.type = type_name;
+		std::cout << "id: " << texture._id << '\n';
+		texture._type = type_name;
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);

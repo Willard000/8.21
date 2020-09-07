@@ -11,12 +11,12 @@ uniform float text_height;
 uniform float scale;
 uniform vec2 position;
 
-out vec2 out_vertex;
+out vec2 out_uv;
 
 void main() {
 	float x = vertex.x * text_width * scale + position.x;
 	float y = vertex.y * text_height * scale + position.y;
 	gl_Position = projection * vec4(vec2(x, y), 0, 1);
 
-	out_vertex = vec2(vertex.x, -vertex.y);
+	out_uv = vec2(vertex.x, -vertex.y);
 }

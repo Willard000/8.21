@@ -23,8 +23,12 @@ Terrain::Terrain(int width, int length, float tile_width, float tile_length) :
 }
 
 Terrain::~Terrain() {
+	glDeleteVertexArrays(1, &_vao);
+	glDeleteBuffers(1, &_vertex_buffer);
+	glDeleteBuffers(1, &_uv_buffer);
+
 	glDeleteTextures(1, &_height_texture);
-	glDeleteTextures(1, &_tile_texture.id);
+	glDeleteTextures(1, &_tile_texture._id);
 }
 
 void Terrain::generate_vertex_data() {
@@ -114,8 +118,8 @@ void Terrain::generate_position_data() {
 }
 
 void Terrain::load_textures() {
-	_tile_texture.id = SOIL_load_OGL_texture("Data\\Terrain\\tile.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
-	if (_tile_texture.id == 0) {
+	_tile_texture._id = SOIL_load_OGL_texture("Data\\Terrain\\tile.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
+	if (_tile_texture._id == 0) {
 		std::cout << "SOIL RESULT " << SOIL_last_result() << " Data\\tiles.png" << '\n';
 	}
 
@@ -291,7 +295,7 @@ void Terrain::create_vao() {
 	glUniform1i(glGetUniformLocation(_program, "tile_texture"), 1);
 
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, _tile_texture.id);
+	glBindTexture(GL_TEXTURE_2D, _tile_texture._id);
 }
 
 void Terrain::draw(int mode) {
@@ -303,7 +307,7 @@ void Terrain::draw(int mode) {
 	glBindTextureUnit(GL_TEXTURE0, _height_buffer);
 
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, _tile_texture.id);
+	glBindTexture(GL_TEXTURE_2D, _tile_texture._id);
 
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);

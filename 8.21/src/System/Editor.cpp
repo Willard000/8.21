@@ -46,6 +46,10 @@ void Editor::run() {
 	std::shared_ptr<GUISelectionGrid> ui_test2 = std::make_shared<GUISelectionGrid>(.2f, .2f, glm::vec2(.0f, .0f), glm::vec4(0, 1, 1, .5f));
 	std::shared_ptr<GUISelectionGrid> ui_test3 = std::make_shared<GUISelectionGrid>(.2f, .2f, glm::vec2(.0f, .0f), glm::vec4(1, 1, 0, .5f));
 	std::shared_ptr<GUIMaster> ui_master = std::make_shared<GUIMaster>(.2f, .4f, glm::vec2(.1f, .1f), glm::vec4(1, 0, 0, .5f));
+
+	auto icon = Environment::get().get_resource_manager()->get_icon(0);
+	ui_test->add(icon);
+
 	ui_master->add(ui_test);
 	ui_master->add(ui_test2);
 	ui_master->add(ui_test3);

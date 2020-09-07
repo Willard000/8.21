@@ -44,3 +44,7 @@ void GUIManager::scroll(double yoffset) {
 void GUIManager::draw_text(GUITextDesc text_desc, GUIMasterDesc master_desc) {
 	_draw_text.draw(text_desc, master_desc);
 }
+
+void GUIManager::draw_icon(GUIIconDesc icon_desc) {
+	_draw_icon.draw(icon_desc);
+}

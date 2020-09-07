@@ -17,7 +17,7 @@
 #define GUI_TEXT_SHADER 3
 #define VERDANA_FONT_PATH "Data\\Font\\verdana.png"
 
-constexpr GLfloat vertex_data[12] = { 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1 };
+constexpr GLfloat vertex_data[12] = { 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f };
 
 static FontMap font_map;
 
@@ -60,6 +60,7 @@ GUIDrawElement::GUIDrawElement() {
 
 GUIDrawElement::~GUIDrawElement() {
 	glDeleteVertexArrays(1, &_vao);
+	glDeleteBuffers(1, &_vertex_buffer);
 }
 
 void GUIDrawElement::draw(GUIDrawDesc draw_desc, GUIMasterDesc master_desc) {  
@@ -223,6 +224,13 @@ GUIDrawText::GUIDrawText() {
 	load_font_atlas();
 }
 
+GUIDrawText::~GUIDrawText() {
+	glDeleteVertexArrays(1, &_vao);
+	glDeleteBuffers(1, &_vertex_buffer);
+
+	glDeleteTextures(1, &_font_atlas);
+}
+
 void GUIDrawText::create_vao() {
 	glCreateVertexArrays(1, &_vao);
 	glBindVertexArray(_vao);
@@ -246,6 +254,17 @@ void GUIDrawText::load_font_atlas() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
+inline const float text_max_height(std::string_view string) {
+	float max_height = 0.0f;
+	for (const auto character : string) {
+		const auto height = font_map.height(character);
+		if (height > max_height) {
+			max_height = height;
+		}
+	}
+	return max_height;
+}
+
 void GUIDrawText::draw(GUITextDesc text_desc, GUIMasterDesc master_desc) {
 	if (text_desc._string.empty()) {
 		return;
@@ -261,21 +280,22 @@ void GUIDrawText::draw(GUITextDesc text_desc, GUIMasterDesc master_desc) {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	const bool child_element = master_desc._width + master_desc._height;
-
+	const float max_height = text_max_height(text_desc._string);
 	if (child_element) {
-		text_desc._position += master_desc._position;
-		text_desc._position.y += master_desc._scroll;
+		text_desc._position.x += master_desc._position.x;
+		text_desc._position.y += master_desc._height + master_desc._ypos + master_desc._scroll - (max_height * text_desc._scale);
 	}
 
 	for (const auto character : text_desc._string) {
 		const auto text_width = font_map.width(character);
+		const auto text_height = font_map.height(character);
 
 		glUniform4fv(glGetUniformLocation(_program, "screen_space"), 1, &master_desc._screen_space[0]);
 		glUniform1f(glGetUniformLocation(_program, "scale"), text_desc._scale);
 		glUniform4fv(glGetUniformLocation(_program, "color"), 1, &text_desc._color[0]);
 		glUniform2fv(glGetUniformLocation(_program, "position"), 1, &text_desc._position[0]);
 		glUniform1f(glGetUniformLocation(_program, "text_width"), text_width);
-		glUniform1f(glGetUniformLocation(_program, "text_height"), font_map.height(character));
+		glUniform1f(glGetUniformLocation(_program, "text_height"), text_height);
 		glUniform2fv(glGetUniformLocation(_program, "text_position"), 1, &font_map.position(character)[0]);
 
 		glDrawArrays(text_desc._mode, 0, 6);
@@ -289,7 +309,8 @@ void GUIDrawText::draw(GUITextDesc text_desc, GUIMasterDesc master_desc) {
 GUISelectionGrid::GUISelectionGrid(float width, float height, glm::vec2 position, glm::vec4 color) :
 	GUIPositionElement		( width, height, position, color )
 {
-	_title._string = "Title";
+	_title._string = "Grid";
+	_title._scale = 0.1f;
 }
 
 void GUISelectionGrid::select(GUIMasterDesc master_desc) {
@@ -299,12 +320,25 @@ void GUISelectionGrid::select(GUIMasterDesc master_desc) {
 void GUISelectionGrid::draw(GUIDrawDesc draw_desc, GUIMasterDesc master_desc) {
 	GUIDrawElement::draw(draw_desc, master_desc);
 
+	GUIIconDesc icon_desc;
+	icon_desc._width = 0.1f;
+	icon_desc._height = 0.2f;
+	for(const auto icon : _icons) {
+		icon_desc._texture = icon->_texture->_id;
+		Environment::get().get_gui_manager()->draw_icon(icon_desc);
+	}
+
 	master_desc._position.y += _height;
+	master_desc._sub_height = _height;
 	Environment::get().get_gui_manager()->draw_text(_title, master_desc);
 }
 
 bool GUISelectionGrid::selected() {
 	return GUISelectElement::selected();
+}
+
+void GUISelectionGrid::add(std::shared_ptr<GUIIcon> icon) {
+	_icons.push_back(icon);
 }
 
 GUIMaster::GUIMaster(float width, float height, glm::vec2 position, glm::vec4 color) :

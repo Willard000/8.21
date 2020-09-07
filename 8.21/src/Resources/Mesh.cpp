@@ -20,6 +20,18 @@ Mesh::Mesh(
 	load_buffers();
 }
 
+Mesh::~Mesh() {
+	glDeleteVertexArrays(1, &_vao);
+	glDeleteBuffers(1, &_vertex_buffer);
+	glDeleteBuffers(1, &_uv_buffer);
+	glDeleteBuffers(1, &_normal_buffer);
+	glDeleteBuffers(1, &_indices_buffer);
+
+	for(const auto texture : _textures) {
+		glDeleteTextures(1, &texture._id);
+	}
+}
+
 void Mesh::load_buffers() {
 	glCreateVertexArrays(1, &_vao);
 	glBindVertexArray(_vao);
@@ -63,7 +75,7 @@ void Mesh::draw(const GLuint program, Transform& transform, int mode) {
 
 	for (unsigned int i = 0; i < _textures.size(); ++i) {
 		glActiveTexture(GL_TEXTURE0 + i);
-		glBindTexture(GL_TEXTURE_2D, _textures[i].id);
+		glBindTexture(GL_TEXTURE_2D, _textures[i]._id);
 	}
 
 	glDrawElements(mode, _indices.size(), GL_UNSIGNED_SHORT, (void*)0);
