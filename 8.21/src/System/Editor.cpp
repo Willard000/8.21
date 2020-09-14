@@ -29,7 +29,7 @@ Editor::Editor() :
 	InputManager* input_manager = new EditorInputManager;
 	_environment.set_input_manager(input_manager);
 
-	GUIManager* gui_manager = new GUIManager;
+	GUIManager* gui_manager = new EditorGUIManager;
 	_environment.set_gui_manager(gui_manager);
 }
 
@@ -38,22 +38,7 @@ Editor::~Editor() {
 	glfwTerminate();
 }
 
-#include "../src/Resources/GUI.h"
-#include "../src/Resources/GUIText.h"
 void Editor::run() {
-
-	std::shared_ptr<GUISelectionGrid> ui_test = std::make_shared<GUISelectionGrid>(.2f, .2f, glm::vec2(.0f, .0f), glm::vec4(1, 0, 1, .5f));
-	std::shared_ptr<GUISelectionGrid> ui_test2 = std::make_shared<GUISelectionGrid>(.2f, .2f, glm::vec2(.0f, .0f), glm::vec4(0, 1, 1, .5f));
-	std::shared_ptr<GUISelectionGrid> ui_test3 = std::make_shared<GUISelectionGrid>(.2f, .2f, glm::vec2(.0f, .0f), glm::vec4(1, 1, 0, .5f));
-	std::shared_ptr<GUIMaster> ui_master = std::make_shared<GUIMaster>(.2f, .4f, glm::vec2(.1f, .1f), glm::vec4(1, 0, 0, .5f));
-
-	auto icon = Environment::get().get_resource_manager()->get_icon(0);
-	ui_test->add(icon);
-
-	ui_master->add(ui_test);
-	ui_master->add(ui_test2);
-	ui_master->add(ui_test3);
-	_environment.get_gui_manager()->add((ui_master));
 
 	while (!_exit) {
 		_environment.get_clock()->update();

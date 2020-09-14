@@ -20,6 +20,8 @@
 #define ENTITY_FILE "Data\\Entities\\entities.txt"
 #define TEXTURE_FILE "Data\\Textures\\textures.txt"
 
+/********************************************************************************************************************************************************/
+
 ProgramManager::ProgramManager()
 {}
 
@@ -59,6 +61,8 @@ bool ProgramManager::load_program(int key, std::string_view file_path) {
 std::shared_ptr<Program> ProgramManager::get_program(int key) {
 	return _programs.at(key);
 }
+
+/********************************************************************************************************************************************************/
 
 TextureManager::TextureManager()
 {}
@@ -122,6 +126,12 @@ std::shared_ptr<GUIIcon> TextureManager::get_icon(int key) {
 	return _icons.at(key);
 }
 
+std::map<int, std::shared_ptr<GUIIcon>>* TextureManager::get_icons() {
+	return &_icons;
+}
+
+/********************************************************************************************************************************************************/
+
 MapManager::MapManager()
 {}
 
@@ -135,6 +145,8 @@ void MapManager::load_map() {
 std::shared_ptr<Terrain> MapManager::get_terrain() {
 	return _terrain;
 }
+
+/********************************************************************************************************************************************************/
 
 ModelManager::ModelManager()
 {}
@@ -175,6 +187,8 @@ bool ModelManager::load_model(int id, std::string_view file_path) {
 	return true;
 }
 
+/********************************************************************************************************************************************************/
+
 EntityManager::EntityManager()
 {}
 
@@ -205,6 +219,18 @@ void EntityManager::load_default_entities() {
 
 }
 
+std::shared_ptr<Entity> EntityManager::new_entity(std::string_view type, int id) {
+	const auto default_entity = _default_entities.at(type.data()).at(id);
+	const auto new_entity = std::make_shared<Entity>(*default_entity);
+	new_entity->copy(*default_entity);
+
+	_entities.push_back(new_entity);
+
+	return new_entity;
+}
+
+/********************************************************************************************************************************************************/
+
 ResourceManager::ResourceManager()
 {}
 
@@ -221,4 +247,10 @@ void ResourceManager::load_resources() {
 
 void ResourceManager::draw() {
 	_terrain->draw(GL_TRIANGLES);
+
+	for(const auto entity : _entities) {
+		_models.at(entity->get_model_id())->draw(entity->get<TransformComponent>()->_transform);
+	}
 }
+
+/********************************************************************************************************************************************************/

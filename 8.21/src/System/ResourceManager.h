@@ -15,6 +15,8 @@ class Model;
 class Terrain;
 class Entity;
 
+/********************************************************************************************************************************************************/
+
 class ProgramManager {
 public:
 public:
@@ -30,6 +32,8 @@ private:
 	std::map<int, std::shared_ptr<Program>> _programs;
 };
 
+/********************************************************************************************************************************************************/
+
 class MapManager {
 public:
 	MapManager();
@@ -42,6 +46,8 @@ protected:
 private:
 };
 
+/********************************************************************************************************************************************************/
+
 class TextureManager {
 public:
 	TextureManager();
@@ -49,6 +55,8 @@ public:
 	
 	std::shared_ptr<Texture> get_texture(int key);
 	std::shared_ptr<GUIIcon> get_icon(int key);
+
+	std::map<int, std::shared_ptr<GUIIcon>>* get_icons();
 protected:
 	void load_textures();
 	bool load_texture(int key, std::string_view file_path);
@@ -57,6 +65,8 @@ private:
 	std::map<int, std::shared_ptr<Texture>> _textures;
 	std::map<int, std::shared_ptr<GUIIcon>> _icons;
 };
+
+/********************************************************************************************************************************************************/
 
 class ModelManager {
 public:
@@ -70,12 +80,16 @@ protected:
 private:
 };
 
+/********************************************************************************************************************************************************/
+
 class EntityManager {
 public:
 	EntityManager();
 	~EntityManager();
 
 	void load_default_entities();
+
+	std::shared_ptr<Entity> new_entity(std::string_view type, int id);
 protected:
 	std::vector<std::shared_ptr<Entity>> _entities;
 
@@ -83,6 +97,8 @@ protected:
 	std::map<std::string, std::map<unsigned int, std::shared_ptr<Entity>>> _default_entities;
 private:
 };
+
+/********************************************************************************************************************************************************/
 
 class ResourceManager : public ProgramManager, public TextureManager, public ModelManager, public MapManager, public EntityManager {
 public:
@@ -93,5 +109,7 @@ public:
 	void draw();
 private:
 };
+
+/********************************************************************************************************************************************************/
 
 #endif

@@ -31,6 +31,7 @@ Window::Window(const ReadWindowFile window_file) :
 	assert(_window);
 	glfwMakeContextCurrent(_window);
 	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
+
 	glfwSetWindowPos(_window, window_file._xpos, window_file._ypos);
 
 	if(gl3wInit()) {

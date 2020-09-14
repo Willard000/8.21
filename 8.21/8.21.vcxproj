@@ -152,7 +152,6 @@
     <ClCompile Include="src\Resources\Camera.cpp" />
     <ClCompile Include="src\Resources\FontMap.cpp" />
     <ClCompile Include="src\Resources\GUI.cpp" />
-    <ClCompile Include="src\Resources\Icon.cpp" />
     <ClCompile Include="src\Resources\Mesh.cpp" />
     <ClCompile Include="src\Resources\Model.cpp" />
     <ClCompile Include="src\Resources\Program.cpp" />
@@ -179,7 +178,6 @@
     <ClInclude Include="src\Resources\Camera.h" />
     <ClInclude Include="src\Resources\FontMap.h" />
     <ClInclude Include="src\Resources\GUI.h" />
-    <ClInclude Include="src\Resources\Icon.h" />
     <ClInclude Include="src\Resources\Mesh.h" />
     <ClInclude Include="src\Resources\Model.h" />
     <ClInclude Include="src\Resources\Program.h" />

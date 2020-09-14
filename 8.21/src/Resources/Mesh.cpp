@@ -1,7 +1,6 @@
 #include "Mesh.h"
 
 Mesh::Mesh() {
-	load_buffers();
 }
 
 Mesh::Mesh(
@@ -20,14 +19,43 @@ Mesh::Mesh(
 	load_buffers();
 }
 
+Mesh::Mesh(const Mesh& rhs) :
+	_textures		( rhs._textures ),
+	_vertices		( rhs._vertices ),
+	_uvs			( rhs._uvs ),
+	_normals		( rhs._normals ),
+	_indices		( rhs._indices ),
+	_vao			( rhs._vao ),
+	_vertex_buffer  ( rhs._vertex_buffer ),
+	_uv_buffer		( rhs._uv_buffer ),
+	_normal_buffer  ( rhs._normal_buffer ),
+	_indices_buffer ( rhs._indices_buffer )
+{}
+
+Mesh::Mesh(Mesh&& rhs) noexcept :
+	_textures		( std::move(rhs._textures) ),
+	_vertices		( std::move(rhs._vertices) ),
+	_uvs			( std::move(rhs._uvs) ),
+	_normals		( std::move(rhs._normals) ),
+	_indices		( std::move(rhs._indices) ),
+	_vao			( rhs._vao ),
+	_vertex_buffer	( rhs._vertex_buffer ),
+	_uv_buffer		( rhs._uv_buffer ),
+	_normal_buffer	( rhs._normal_buffer ),
+	_indices_buffer	( rhs._indices_buffer )
+{}
+
 Mesh::~Mesh() {
+}
+
+void Mesh::delete_vao() {
 	glDeleteVertexArrays(1, &_vao);
 	glDeleteBuffers(1, &_vertex_buffer);
 	glDeleteBuffers(1, &_uv_buffer);
 	glDeleteBuffers(1, &_normal_buffer);
 	glDeleteBuffers(1, &_indices_buffer);
 
-	for(const auto texture : _textures) {
+	for (const auto texture : _textures) {
 		glDeleteTextures(1, &texture._id);
 	}
 }
@@ -67,6 +95,7 @@ void Mesh::load_buffers() {
 	}
 }
 
+#include <iostream>
 void Mesh::draw(const GLuint program, Transform& transform, int mode) {
 	glBindVertexArray(_vao);
 	glUseProgram(program);

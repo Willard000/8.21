@@ -13,7 +13,7 @@ class FileReader;
 struct ReadTransformFile {
 	ReadTransformFile(FileReader& file);
 
-	glm::vec3 _scale = glm::vec3(0, 0, 0);
+	glm::vec3 _scale = glm::vec3(1, 1, 1);
 	glm::vec3 _rotation = glm::vec3(0, 0, 0);
 	float _speed = 0.1f;
 	bool _collidable = true;

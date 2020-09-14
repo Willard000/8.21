@@ -27,8 +27,9 @@ public:
 	Model(std::shared_ptr<Program> program, std::string_view directory, std::string_view model_file);
 	Model(int id, std::string_view file_path);
 	Model(const Model& rhs);
+	~Model();
 
-	void draw(Transform& transform) const;
+	void draw(Transform& transform);
 
 	std::shared_ptr<Program> get_program();
 private:

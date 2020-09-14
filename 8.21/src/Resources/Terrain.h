@@ -9,8 +9,11 @@
 
 #include "Texture.h"
 #include "Transform.h"
+#include "../src/Entities/Entity.h"
 
-struct Tile_Height {
+/********************************************************************************************************************************************************/
+
+struct TileHeight {
 	//   0-------1
 	//   | tile  |
 	//   |       |
@@ -27,21 +30,26 @@ struct Tile_Height {
 	}
 };
 
-class Terrain_Data {
+/********************************************************************************************************************************************************/
+
+class TerrainData {
 public:
-	Terrain_Data(int width, int height, float tile_width, float tile_length);
+	TerrainData();
+	TerrainData(int width, int height, float tile_width, float tile_length);
 protected:
 	int _width;
 	int _length;
 	float _tile_width;
 	float _tile_length;
 
-	std::vector<Tile_Height> _height_map;
+	std::vector<TileHeight> _height_map;
 };
 
-class Tile_Selection : public Terrain_Data {
+/********************************************************************************************************************************************************/
+
+class TileSelection : virtual public TerrainData {
 public:
-	Tile_Selection(int width, int height, float tile_width, float tile_length);
+	TileSelection();
 
 	void select(int x, int z);
 	void draw();
@@ -67,7 +75,22 @@ private:
 	Transform _transform;
 };
 
-class Terrain : public Tile_Selection {
+/********************************************************************************************************************************************************/
+
+class TerrainEntities : virtual public TerrainData {
+public:
+	TerrainEntities();
+
+	void add_entity(std::shared_ptr<Entity> entity, int tile_x, int tile_z);
+	void remove_entity(int tile_x, int tile_z);
+	void adjust_entity_height(int tile_x, int tile_z);
+protected:
+	std::vector<std::shared_ptr<Entity>> _entities;
+};
+
+/********************************************************************************************************************************************************/
+
+class Terrain : public TileSelection, public TerrainEntities, virtual public TerrainData {
 public:
 	Terrain(int width, int length, float tile_width, float tile_length);
 	~Terrain();
@@ -84,10 +107,10 @@ public:
 
 	float get_tile_width();
 	float get_tile_length();
-	Tile_Height get_tile_height(int x, int z);
+	TileHeight get_tile_height(int x, int z);
 	float get_vertex_height(int index, int vertex);
 
-	Tile_Selection* get_tile_selection();
+	TileSelection* get_tile_selection();
 private:
 	void generate_vertex_data();
 	void generate_uv_data();
@@ -109,5 +132,7 @@ private:
 
 	Texture _tile_texture;
 };
+
+/********************************************************************************************************************************************************/
 
 #endif

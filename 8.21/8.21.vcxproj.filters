@@ -114,9 +114,6 @@
     <ClCompile Include="src\Resources\Texture.cpp">
       <Filter>Source Files\Resources</Filter>
     </ClCompile>
-    <ClCompile Include="src\Resources\Icon.cpp">
-      <Filter>Source Files\Resources</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\System\Environment.h">
@@ -183,9 +180,6 @@
       <Filter>Header Files\System</Filter>
     </ClInclude>
     <ClInclude Include="src\Resources\FontMap.h">
-      <Filter>Header Files\Resources</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Resources\Icon.h">
       <Filter>Header Files\Resources</Filter>
     </ClInclude>
   </ItemGroup>

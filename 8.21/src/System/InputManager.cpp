@@ -7,6 +7,7 @@
 #include "../src/System/GUIManager.h"
 
 #include "../src/Resources/Terrain.h"
+#include "../src/Entities/Entity.h"
 
 #include <GLFW/glfw3.h>
 
@@ -20,9 +21,30 @@ void select_tile() {
 	const auto camera = Environment::get().get_window()->get_camera();
 	const float y_diff = abs(camera->get_position().y / world_space.y);
 	const int tile_x = int((y_diff * world_space.x + camera->get_position().x) / terrain->get_tile_width());
-	const int tile_y = int((y_diff * world_space.z + camera->get_position().z) / terrain->get_tile_length());
+	const int tile_z = int((y_diff * world_space.z + camera->get_position().z) / terrain->get_tile_length());
 
-	terrain->select(tile_x, tile_y);
+	terrain->select(tile_x, tile_z);
+}
+
+void place_entity() {
+	const auto gui_manager = (EditorGUIManager*)Environment::get().get_gui_manager();
+	const auto selection = gui_manager->get_selection();
+	const auto resource_manager = Environment::get().get_resource_manager();
+
+	if (!selection) {
+		return;
+	}
+
+	const auto terrain = Environment::get().get_resource_manager()->get_terrain();
+	const auto world_space = Environment::get().get_input_manager()->get_mouse_world_space_vector();
+	const auto camera = Environment::get().get_window()->get_camera();
+	const float y_diff = abs(camera->get_position().y / world_space.y);
+	const int tile_x = int((y_diff * world_space.x + camera->get_position().x) / terrain->get_tile_width());
+	const int tile_z = int((y_diff * world_space.z + camera->get_position().z) / terrain->get_tile_length());
+
+	const auto entity = resource_manager->new_entity(selection->_type, selection->_id);
+
+	terrain->add_entity(entity, tile_x, tile_z);
 }
 
 InputManager::InputManager() :
@@ -283,10 +305,14 @@ void EditorInputManager::mouse_button_callback(GLFWwindow* window, int button, i
 		if (!GUI_selected) {
 			Environment::get().get_resource_manager()->get_terrain()->adjust_tile_height(1);
 		}
+		else {
+			Environment::get().get_gui_manager()->click();
+		}
 	}
 	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
 		if (!GUI_selected) {
-			Environment::get().get_resource_manager()->get_terrain()->adjust_ramp_height();
+			//Environment::get().get_resource_manager()->get_terrain()->adjust_ramp_height();
+			place_entity();
 		}
 	}
 }

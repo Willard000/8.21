@@ -48,8 +48,14 @@ Model::Model(const Model& rhs) :
 	_meshes			( rhs._meshes ) 
 {}
 
-void Model::draw(Transform& transform) const {
-	for(auto mesh : _meshes) {
+Model::~Model() {
+	for(auto& mesh : _meshes) {
+		mesh.delete_vao();
+	}
+}
+
+void Model::draw(Transform& transform) {
+	for(auto& mesh : _meshes) {
 		mesh.draw(_program->_id, transform);
 	}
 }
@@ -155,7 +161,8 @@ bool Model::load_assimp(std::string_view directory, std::string_view model_file)
 
 		}
 
-		_meshes.push_back(mesh);
+		_meshes.push_back(std::move(mesh));
+
 	}
 
 	return true;

@@ -10,8 +10,163 @@
 
 #define TERRAIN_SHADER_ID 1
 
+/********************************************************************************************************************************************************/
+
+TerrainData::TerrainData(int width, int length, float tile_width, float tile_length) :
+	_width(width),
+	_length(length),
+	_tile_width(tile_width),
+	_tile_length(tile_length)
+{
+	_height_map.resize(width * length);
+}
+
+TerrainData::TerrainData() :
+	_width(0),
+	_length(0),
+	_tile_width(0),
+	_tile_length(0)
+{}
+
+/********************************************************************************************************************************************************/
+
+TileSelection::TileSelection() {
+	_vertex_data.reserve(6);
+	_vertex_data.push_back(glm::vec3(_tile_width, 0.01f, 0.0f));
+	_vertex_data.push_back(glm::vec3(0.0f, 0.01f, 0.0f));
+	_vertex_data.push_back(glm::vec3(0.0f, 0.01f, _tile_length));
+	_vertex_data.push_back(glm::vec3(_tile_width, 0.01f, 0.0f));
+	_vertex_data.push_back(glm::vec3(0.0f, 0.01f, _tile_length));
+	_vertex_data.push_back(glm::vec3(_tile_width, 0.01f, _tile_length));
+
+	create_vao();
+}
+
+void TileSelection::create_vao() {
+	glCreateVertexArrays(1, &_vao);
+	glBindVertexArray(_vao);
+
+	_program = Environment::get().get_resource_manager()->get_program(0)->_id;
+	glUseProgram(_program);
+
+	glUniformMatrix4fv(glGetUniformLocation(_program, "model"), 1, GL_FALSE, &_transform.get_model()[0][0]);
+
+	glCreateBuffers(1, &_vertex_buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, _vertex_buffer);
+	glNamedBufferStorage(_vertex_buffer, sizeof(glm::vec3) * _vertex_data.size(), &_vertex_data[0], GL_DYNAMIC_STORAGE_BIT);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+}
+
+void TileSelection::update_vao() {
+	glBindVertexArray(_vao);
+
+	_transform.set_position(glm::vec3(_x * _tile_width, 0.f, _z * _tile_length));
+	glUseProgram(_program);
+	glUniformMatrix4fv(glGetUniformLocation(_program, "model"), 1, GL_FALSE, &_transform.get_model()[0][0]);
+
+	_vertex_data[0].y = _height_map[_index].height[1] + 0.01f;;
+	_vertex_data[1].y = _height_map[_index].height[0] + 0.01f;;
+	_vertex_data[2].y = _height_map[_index].height[2] + 0.01f;;
+	_vertex_data[3].y = _height_map[_index].height[1] + 0.01f;;
+	_vertex_data[4].y = _height_map[_index].height[2] + 0.01f;;
+	_vertex_data[5].y = _height_map[_index].height[3] + 0.01f;;
+
+	glBindBuffer(GL_ARRAY_BUFFER, _vertex_buffer);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::vec3) * _vertex_data.size(), &_vertex_data[0]);
+}
+
+void TileSelection::select(int x, int z) {
+	if ((x == _x && z == _z)) {
+		return;
+	}
+
+	if (x < 0 || x > _width - 1 ||
+		z < 0 || z > _length - 1) {
+		_valid_index = false;
+		return;
+	}
+
+	_x = x;
+	_z = z;
+	_index = _z * _width + _x;
+	_valid_index = true;
+
+	update_vao();
+}
+
+void TileSelection::draw() {
+	glBindVertexArray(_vao);
+	glUseProgram(_program);
+
+	glUniformMatrix4fv(glGetUniformLocation(_program, "model"), 1, GL_FALSE, &_transform.get_model()[0][0]);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glDrawArrays(GL_TRIANGLES, 0, _vertex_data.size());
+
+	glDisable(GL_BLEND);
+}
+
+bool TileSelection::valid_index(int index) {
+	return (index >= 0 && index < _width* _length);
+}
+
+bool TileSelection::valid_left_index(int index) {
+	return (index / _width == (index + 1) / _width);
+}
+
+bool TileSelection::valid_right_index(int index) {
+	return (index / _width == (index - 1) / _width);
+}
+
+/********************************************************************************************************************************************************/
+
+TerrainEntities::TerrainEntities() {
+	_entities.resize(_width * _length);
+}
+
+void TerrainEntities::add_entity(std::shared_ptr<Entity> entity, int tile_x, int tile_z) {
+	const int index = tile_x + (tile_z * _width);
+	if (index < 0 || index >= _height_map.size()) {
+		return;
+	}
+
+	_entities[index] = entity;
+
+	const auto transform = entity->get<TransformComponent>();
+	transform->_transform.set_position(glm::vec3(tile_x + _tile_width / 2, _height_map[index].height[0], tile_z + _tile_length / 2));
+}
+
+void TerrainEntities::remove_entity(int tile_x, int tile_z) {
+	const int index = tile_x + (tile_z * _width);
+	if (index < 0 || index >= _height_map.size()) {
+		return;
+	}
+
+	_entities[index] = nullptr;
+}
+
+void TerrainEntities::adjust_entity_height(int tile_x, int tile_z) {
+	const int index = tile_x + (tile_z * _width);
+	if (index < 0 || index >= _height_map.size()) {
+		return;
+	}
+
+	const auto entity = _entities[index];
+	if(!entity) {
+		return;
+	}
+
+	const auto transform = entity->get<TransformComponent>();
+	transform->_transform.set_position(glm::vec3(tile_x + _tile_width / 2, _height_map[index].height[0], tile_z + _tile_length / 2));
+}
+
+/********************************************************************************************************************************************************/
+
 Terrain::Terrain(int width, int length, float tile_width, float tile_length) :
-	Tile_Selection			( width, length, tile_width, tile_length )
+	TerrainData			( width, length, tile_width, tile_length )
 {
 	generate_vertex_data();
 	generate_uv_data();
@@ -138,6 +293,8 @@ void Terrain::adjust_tile_height(float height) {
 	adjust_vertex_height(_index, 3, height);
 
 	update_vao();
+
+	adjust_entity_height(_x, _z);
 }
 
 void Terrain::adjust_ramp_height() {
@@ -314,7 +471,7 @@ void Terrain::draw(int mode) {
 
 	glDrawArraysInstanced(mode, 0, 6 * 5, _position_data.size());
 
-	Tile_Selection::draw();
+	TileSelection::draw();
 
 	glDisable(GL_CULL_FACE);
 }
@@ -327,14 +484,14 @@ float Terrain::get_tile_length() {
 	return _tile_length;
 }
 
-Tile_Height Terrain::get_tile_height(int x, int z) {
+TileHeight Terrain::get_tile_height(int x, int z) {
 	if(z < 0 || z >= _length ||
 		x < 0 || x >= _width) {
 		return { 0, 0, 0, 0 };
 	}
 
 	const int index = z * _width + x;
-	Tile_Height tile;
+	TileHeight tile;
 	tile.height[0] = _height_map[index].height[0];
 	tile.height[0] = _height_map[index].height[1];
 	tile.height[0] = _height_map[index].height[2];
@@ -352,102 +509,4 @@ float Terrain::get_vertex_height(int index, int vertex) {
 	return _height_map[index].height[vertex];
 }
 
-Tile_Selection::Tile_Selection(int width, int height, float tile_width, float tile_length) :
-	Terrain_Data (width, height, tile_width, tile_length)
-{
-	_vertex_data.reserve(6);
-	_vertex_data.push_back(glm::vec3(_tile_width, 0.01f, 0.0f));
-	_vertex_data.push_back(glm::vec3(0.0f, 0.01f, 0.0f));
-	_vertex_data.push_back(glm::vec3(0.0f, 0.01f, _tile_length));
-	_vertex_data.push_back(glm::vec3(_tile_width, 0.01f, 0.0f));
-	_vertex_data.push_back(glm::vec3(0.0f, 0.01f, _tile_length));
-	_vertex_data.push_back(glm::vec3(_tile_width, 0.01f, _tile_length));
-
-	create_vao();
-}
-
-void Tile_Selection::create_vao() {
-	glCreateVertexArrays(1, &_vao);
-	glBindVertexArray(_vao);
-
-	_program = Environment::get().get_resource_manager()->get_program(0)->_id;
-	glUseProgram(_program);
-
-	glCreateBuffers(1, &_vertex_buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, _vertex_buffer);
-	glNamedBufferStorage(_vertex_buffer, sizeof(glm::vec3) * _vertex_data.size(), &_vertex_data[0], GL_DYNAMIC_STORAGE_BIT);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-	glUniformMatrix4fv(glGetUniformLocation(_program, "model"), 1, GL_FALSE, &_transform.get_model()[0][0]);
-}
-
-void Tile_Selection::update_vao() {
-	_transform.set_position(glm::vec3(_x * _tile_width, 0.f, _z * _tile_length));
-	glUseProgram(_program);
-	glUniformMatrix4fv(glGetUniformLocation(_program, "model"), 1, GL_FALSE, &_transform.get_model()[0][0]);
-	
-	_vertex_data[0].y = _height_map[_index].height[1] + 0.01f;;
-	_vertex_data[1].y = _height_map[_index].height[0] + 0.01f;;
-	_vertex_data[2].y = _height_map[_index].height[2] + 0.01f;;
-	_vertex_data[3].y = _height_map[_index].height[1] + 0.01f;;
-	_vertex_data[4].y = _height_map[_index].height[2] + 0.01f;;
-	_vertex_data[5].y = _height_map[_index].height[3] + 0.01f;;
-
-	glBindBuffer(GL_ARRAY_BUFFER, _vertex_buffer);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::vec3) * _vertex_data.size(), &_vertex_data[0]);
-}
-
-void Tile_Selection::select(int x, int z) {
-	if ((x == _x && z == _z)) {
-		return;
-	}
-
-	if (x < 0 || x > _width - 1 ||
-		z < 0 || z > _length - 1) {
-		_valid_index = false;
-		return;
-	}
-
-	_x = x;
-	_z = z;
-	_index = _z * _width + _x;
-	_valid_index = true;
-
-	update_vao();
-}
-
-void Tile_Selection::draw() {
-	glBindVertexArray(_vao);
-	glUseProgram(_program);
-
-	glUniformMatrix4fv(glGetUniformLocation(_program, "model"), 1, GL_FALSE, &_transform.get_model()[0][0]);
-
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	glDrawArrays(GL_TRIANGLES, 0, _vertex_data.size());
-
-	glDisable(GL_BLEND);
-}
-
-bool Tile_Selection::valid_index(int index) {
-	return (index >= 0 && index < _width * _length);
-}
-
-bool Tile_Selection::valid_left_index(int index) {
-	return (index / _width == (index + 1) / _width);
-}
-
-bool Tile_Selection::valid_right_index(int index) {
-	return (index / _width == (index - 1) / _width);
-}
-
-Terrain_Data::Terrain_Data(int width, int length, float tile_width, float tile_length) :
-	_width			 ( width ),
-	_length			 ( length ),
-	_tile_width		 ( tile_width ),
-	_tile_length	 ( tile_length )
-{
-	_height_map.resize(width * length);
-}
+/********************************************************************************************************************************************************/
