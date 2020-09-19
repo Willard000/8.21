@@ -4,3 +4,5 @@
 2 Data\Shaders\GUI Shader\GUI shader.txt
 3 Data\Shaders\Text Shader\text shader.txt
 4 Data\Shaders\Icon Shader\icon shader.txt
+5 Data\Shaders\Texture Shader\texture shader.txt
+6 Data\Shaders\View Shader\view shader.txt

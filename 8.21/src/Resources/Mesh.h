@@ -25,6 +25,7 @@ public:
 	void load_buffers();
 	void update_buffers();
 	void draw(const GLuint program, Transform& transform, int mode = GL_TRIANGLES);
+
 	void delete_vao();
 public:
 	std::vector<Texture>        _textures;

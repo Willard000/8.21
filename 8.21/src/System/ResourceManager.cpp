@@ -187,6 +187,10 @@ bool ModelManager::load_model(int id, std::string_view file_path) {
 	return true;
 }
 
+std::shared_ptr<Model> ModelManager::get_model(int key) {
+	return _models.at(key);
+}
+
 /********************************************************************************************************************************************************/
 
 EntityManager::EntityManager()
@@ -229,6 +233,10 @@ std::shared_ptr<Entity> EntityManager::new_entity(std::string_view type, int id)
 	return new_entity;
 }
 
+std::shared_ptr<Entity> EntityManager::get_default_entity(std::string_view type, unsigned int id) {
+	return _default_entities.at(type.data()).at(id);
+}
+
 /********************************************************************************************************************************************************/
 
 ResourceManager::ResourceManager()
@@ -252,5 +260,4 @@ void ResourceManager::draw() {
 		_models.at(entity->get_model_id())->draw(entity->get<TransformComponent>()->_transform);
 	}
 }
-
 /********************************************************************************************************************************************************/

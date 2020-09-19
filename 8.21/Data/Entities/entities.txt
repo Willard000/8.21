@@ -2,3 +2,4 @@
 
 # Object
 0 Data\Entities\Objects\tree.txt
+1 Data\Entities\Objects\test.txt

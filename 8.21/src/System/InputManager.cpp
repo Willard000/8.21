@@ -13,6 +13,8 @@
 
 #include <cmath>
 
+/********************************************************************************************************************************************************/
+
 constexpr float SCROLL_SPEED = 50000.0f;
 
 void select_tile() {
@@ -46,6 +48,8 @@ void place_entity() {
 
 	terrain->add_entity(entity, tile_x, tile_z);
 }
+
+/********************************************************************************************************************************************************/
 
 InputManager::InputManager() :
 	_xpos			( 0.0 ),
@@ -86,6 +90,8 @@ glm::vec3 InputManager::get_mouse_world_space_vector() {
 
 	return world_space;
 }
+
+/********************************************************************************************************************************************************/
 
 GameInputManager::GameInputManager()
 {
@@ -192,7 +198,11 @@ void GameInputManager::mouse_button_callback(GLFWwindow* window, int button, int
 	}
 }
 
-EditorInputManager::EditorInputManager() {
+/********************************************************************************************************************************************************/
+
+EditorInputManager::EditorInputManager() :
+	_mode		( EDITOR_EDIT_TERRAIN )
+{
 	auto window = Environment::get().get_window()->get_glfw_window();
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetScrollCallback(window, scroll_callback);
@@ -316,3 +326,9 @@ void EditorInputManager::mouse_button_callback(GLFWwindow* window, int button, i
 		}
 	}
 }
+
+void EditorInputManager::set_mode(int mode) {
+	_mode = mode;
+}
+
+/********************************************************************************************************************************************************/

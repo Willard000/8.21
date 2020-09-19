@@ -14,9 +14,11 @@ uniform vec4 screen_space;
 uniform sampler2D font_atlas;
 
 void main() {
-	if(gl_FragCoord.y < screen_space.y || gl_FragCoord.y > screen_space.y + screen_space.w ||
- 	   gl_FragCoord.x < screen_space.x || gl_FragCoord.x > screen_space.x + screen_space.z) {
-		discard;
+	if(screen_space.x > 0 || screen_space.y > 0) {
+		if(gl_FragCoord.y < screen_space.y || gl_FragCoord.y > screen_space.y + screen_space.w ||
+ 	   	gl_FragCoord.x < screen_space.x || gl_FragCoord.x > screen_space.x + screen_space.z) {
+			discard;
+		}
 	}
 
 	vec2 p = vec2(out_uv.x * text_width + text_position.x, out_uv.y * text_height + text_position.y + text_height);

@@ -22,6 +22,7 @@ public:
 	const float width(char c);
 	const float height(char c);
 	const glm::vec2 position(char c);
+	const glm::vec2 origin(char c);
 private:
 	std::map<char, const Character*> _font_map;
 };

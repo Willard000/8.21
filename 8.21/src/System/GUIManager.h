@@ -6,6 +6,8 @@
 
 #include <memory>
 
+/********************************************************************************************************************************************************/
+
 class GUIManager {
 public:
 	GUIManager();
@@ -22,27 +24,48 @@ public:
 	bool selected();
 	void scroll(double yoffset);
 
-	void draw_text(GUITextDesc text_desc, GUIMasterDesc master_desc);
-	void draw_icon(GUIIconDesc icon_desc, GUIMasterDesc master_desc);
+	void draw_text(GUITextDesc text_desc, GUIMasterDesc master_desc = GUIMasterDesc());
+	void draw_icon(GUIIconDesc icon_desc, GUIMasterDesc master_desc = GUIMasterDesc());
+	void draw_element(GUIDrawDesc draw_desc, GUIMasterDesc master_desc = GUIMasterDesc());
 protected:
 	std::vector<std::shared_ptr<GUIMaster>> _masters;
+	std::vector<std::shared_ptr<GUIElement>> _elements;
 
 	GUIDrawText _draw_text;
 	GUIDrawIcon _draw_icon;
+	GUIDrawElement _draw_element;
 };
 
-class GUIEntityGrid {
+/********************************************************************************************************************************************************/
+
+class GUIEntitySelection {
 public:
-	GUIEntityGrid();
+	GUIEntitySelection();
 
 	std::shared_ptr<GUIIcon> get_selection();
 protected:
 	std::shared_ptr<GUIMaster> _master;
 	std::shared_ptr<GUISelectionGrid> _object_grid;
 	//...
+
+	std::shared_ptr<GUISelectionView> _selection_view;
 };
 
-class EditorGUIManager : public GUIManager, public GUIEntityGrid {
+/********************************************************************************************************************************************************/
+
+class GUIEditorButtons {
+public:
+	GUIEditorButtons();
+
+protected:
+	std::shared_ptr<GUIButtonIcon> _bt_select_entity;
+	std::shared_ptr<GUIButtonIcon> _bt_place_entity;
+	std::shared_ptr<GUIButtonIcon> _bt_edit_terrain;
+};
+
+/********************************************************************************************************************************************************/
+
+class EditorGUIManager : public GUIManager, public GUIEntitySelection, public GUIEditorButtons {
 public:
 	EditorGUIManager();
 	~EditorGUIManager();
@@ -50,5 +73,7 @@ public:
 private:
 	
 };
+
+/********************************************************************************************************************************************************/
 
 #endif

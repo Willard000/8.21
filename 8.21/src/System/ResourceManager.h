@@ -73,6 +73,8 @@ public:
 	ModelManager();
 	~ModelManager();
 
+
+	std::shared_ptr<Model> get_model(int key);
 protected:
 	void load_models();
 	bool load_model(int id, std::string_view file_path);
@@ -90,6 +92,8 @@ public:
 	void load_default_entities();
 
 	std::shared_ptr<Entity> new_entity(std::string_view type, int id);
+
+	std::shared_ptr<Entity> get_default_entity(std::string_view type, unsigned int id);
 protected:
 	std::vector<std::shared_ptr<Entity>> _entities;
 

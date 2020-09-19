@@ -1,0 +1,4 @@
+# Model
+DIR Data\Models\bridge\
+file bridge.obj
+program 5

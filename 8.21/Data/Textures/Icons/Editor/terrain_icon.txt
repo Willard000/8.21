@@ -1,0 +1,6 @@
+- Terrain Icon
+
+# Texture
+texture Data\Textures\Icons\Editor\terrain.png
+
+# Icon

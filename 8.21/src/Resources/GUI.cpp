@@ -11,6 +11,9 @@
 #include "../src/Resources/FontMap.h"
 
 #include "../src/Resources/Texture.h"
+#include "../src/Resources/Camera.h"
+
+#include "../src/Entities/Entity.h"
 
 #include <SOIL/SOIL2.h>
 
@@ -54,15 +57,7 @@ glm::vec4 GUIPositionElement::screen_space() {
 
 /********************************************************************************************************************************************************/
 
-GUIDrawElement::GUIDrawElement(float width, float height, glm::vec2 position, glm::vec4 color) :
-	GUIPositionElement ( width, height, position, color )
-{
-	generate_vertex_data();
-	create_vao();
-}
-
 GUIDrawElement::GUIDrawElement() {
-	generate_vertex_data();
 	create_vao();
 }
 
@@ -75,32 +70,24 @@ void GUIDrawElement::draw(GUIDrawDesc draw_desc, GUIMasterDesc master_desc) {
 	glBindVertexArray(_vao);
 	glUseProgram(_program);
 
-	const bool child_element = master_desc._width + master_desc._height;										// If attached to a master gui element
+	const bool child_element = (master_desc._width + master_desc._height) > 0.0f;										// If attached to a master gui element
 	const auto position = glm::vec2(
-						  _position.x + master_desc._position.x,
-						  _position.y + master_desc._ypos + (child_element * _height) + master_desc._scroll		// add height
+						 draw_desc._position.x + master_desc._position.x,
+						 draw_desc._position.y + master_desc._ypos + master_desc._height - (child_element * draw_desc._height) + master_desc._scroll		// add height
 	);	
 
 	glUniform4fv(glGetUniformLocation(_program, "screen_space"), 1, &master_desc._screen_space[0]);
-	glUniform4fv(glGetUniformLocation(_program, "color"), 1, &_color[0]);
+	glUniform4fv(glGetUniformLocation(_program, "color"), 1, &draw_desc._color[0]);
 	glUniform2fv(glGetUniformLocation(_program, "position"), 1, &position[0]);
+	glUniform1f(glGetUniformLocation(_program, "width"), draw_desc._width);
+	glUniform1f(glGetUniformLocation(_program, "height"), draw_desc._height);
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
-	glDrawArrays(draw_desc._mode, 0, _vertex_data.size());
+	glDrawArrays(draw_desc._mode, 0, 12);
 
 	glDisable(GL_BLEND);
-}
-
-void GUIDrawElement::generate_vertex_data() {
-	_vertex_data.reserve(6);
-	_vertex_data.push_back(glm::vec2(0, 0));
-	_vertex_data.push_back(glm::vec2(_width, 0));
-	_vertex_data.push_back(glm::vec2(0, _height));
-	_vertex_data.push_back(glm::vec2(0, _height));
-	_vertex_data.push_back(glm::vec2(_width, 0));
-	_vertex_data.push_back(glm::vec2(_width, _height));
 }
 
 void GUIDrawElement::create_vao() {
@@ -113,7 +100,7 @@ void GUIDrawElement::create_vao() {
 
 	glCreateBuffers(1, &_vertex_buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, _vertex_buffer);
-	glNamedBufferStorage(_vertex_buffer, sizeof(glm::vec2) * _vertex_data.size(), &_vertex_data[0], 0);
+	glNamedBufferStorage(_vertex_buffer, sizeof(glm::vec2) * 12, &vertex_data[0], 0);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 }
@@ -143,18 +130,19 @@ void GUISelectElement::select(GUIMasterDesc master_desc) {
 	const float xpos = (float)Environment::get().get_input_manager()->get_mouse_x();
 	const float ypos = (float)Environment::get().get_input_manager()->get_mouse_y();
 
+	const bool master_element = (master_desc._width + master_desc._height <= 0.0f);
 	const auto position = glm::vec2(
 		_position.x + master_desc._position.x,
-		_position.y + master_desc._ypos + master_desc._height - master_desc._scroll
+		_position.y + master_desc._ypos + master_desc._height + master_desc._scroll + (master_element * _height)
 	);
 
 	_mouse_x = xpos - (position.x * window_width);
-	_mouse_y = ypos - (position.y * window_height);
+	_mouse_y = ypos - ((1.0f - position.y) * window_height);
 
 	_valid = _mouse_x <= _width * window_width   &&
 			 _mouse_y <= _height * window_height &&
-			 _mouse_x >= 0						 &&
-			 _mouse_y >= master_desc._scroll * window_height;
+			 _mouse_x >= 0.0f					 &&
+			 _mouse_y >= 0.0f;
 }
 
 bool GUISelectElement::select_icon(GUIIconDesc icon_desc, GUIMasterDesc master_desc) {
@@ -219,7 +207,7 @@ void GUIScrollElement::create_vao() {
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 }
 
-void GUIScrollElement::draw(GUIDrawDesc draw_desc, GUIMasterDesc master_desc) {
+void GUIScrollElement::draw(GUIMasterDesc master_desc) {
 	glBindVertexArray(_vao);
 	glUseProgram(_program);
 
@@ -232,11 +220,13 @@ void GUIScrollElement::draw(GUIDrawDesc draw_desc, GUIMasterDesc master_desc) {
 	glUniform4fv(glGetUniformLocation(_program, "viewport"), 1, &master_desc._screen_space[0]);
 	glUniform4fv(glGetUniformLocation(_program, "color"), 1, &_color[0]);
 	glUniform2fv(glGetUniformLocation(_program, "position"), 1, &position[0]);
+	glUniform1f(glGetUniformLocation(_program, "width"), 1.3f);
+	glUniform1f(glGetUniformLocation(_program, "height"), 1.5f);
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glDrawArrays(draw_desc._mode, 0, _vertex_data.size());
+	glDrawArrays(GL_TRIANGLES, 0, _vertex_data.size());
 
 	glDisable(GL_BLEND);
 }
@@ -288,13 +278,23 @@ void GUIDrawText::load_font_atlas() {
 
 inline const float text_max_height(std::string_view string) {
 	float max_height = 0.0f;
+
 	for (const auto character : string) {
 		const auto height = font_map.height(character);
 		if (height > max_height) {
 			max_height = height;
 		}
 	}
+
 	return max_height;
+}
+
+inline const float text_length(std::string_view string) {
+	float length = 0.0f;
+	for (const auto character : string) {
+		length += font_map.width(character);
+	}
+	return length;
 }
 
 void GUIDrawText::draw(GUITextDesc text_desc, GUIMasterDesc master_desc) {
@@ -311,7 +311,7 @@ void GUIDrawText::draw(GUITextDesc text_desc, GUIMasterDesc master_desc) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	const bool child_element = master_desc._width + master_desc._height;
+	const bool child_element = (master_desc._width + master_desc._height) > 0.0f;
 	const float max_height = text_max_height(text_desc._string);
 	if (child_element) {
 		text_desc._position.x += master_desc._position.x;
@@ -319,20 +319,27 @@ void GUIDrawText::draw(GUITextDesc text_desc, GUIMasterDesc master_desc) {
 	}
 
 	for (const auto character : text_desc._string) {
-		const auto text_width = font_map.width(character);
-		const auto text_height = font_map.height(character);
+		const auto char_width = font_map.width(character);
+		const auto char_height = font_map.height(character);
+		const auto origin = font_map.origin(character) * text_desc._scale;
+		const auto char_position = glm::vec2(text_desc._position.x  , text_desc._position.y - origin.y );
 
 		glUniform4fv(glGetUniformLocation(_program, "screen_space"), 1, &master_desc._screen_space[0]);
 		glUniform1f(glGetUniformLocation(_program, "scale"), text_desc._scale);
 		glUniform4fv(glGetUniformLocation(_program, "color"), 1, &text_desc._color[0]);
-		glUniform2fv(glGetUniformLocation(_program, "position"), 1, &text_desc._position[0]);
-		glUniform1f(glGetUniformLocation(_program, "text_width"), text_width);
-		glUniform1f(glGetUniformLocation(_program, "text_height"), text_height);
+		glUniform2fv(glGetUniformLocation(_program, "position"), 1, &char_position[0]);
+		glUniform1f(glGetUniformLocation(_program, "text_width"), char_width);
+		glUniform1f(glGetUniformLocation(_program, "text_height"), char_height);
 		glUniform2fv(glGetUniformLocation(_program, "text_position"), 1, &font_map.position(character)[0]);
 
 		glDrawArrays(text_desc._mode, 0, 6);
 
-		text_desc._position.x += text_width * text_desc._scale;
+		if (character == ' ') {
+			text_desc._position.x += (char_width * 3) * text_desc._scale + origin.x;
+		}
+		else {
+			text_desc._position.x += char_width * text_desc._scale + origin.x;
+		}
 	}
 
 	glDisable(GL_BLEND);
@@ -428,56 +435,61 @@ GUISelectionGrid::GUISelectionGrid(float width, float height, glm::vec2 position
 {
 	_title._string = "Grid";
 	_title._scale = 0.1f;
+	_title._position.x += (width / 2.0f) - text_length(_title._string) * _title._scale;
+
+	_icon_desc._width = _width / 14.0f;
+	_icon_desc._height = _height / 14.0f;
 }
 
 void GUISelectionGrid::select(GUIMasterDesc master_desc) {
 	GUISelectElement::select(master_desc);
 }
 
-void GUISelectionGrid::draw(GUIDrawDesc draw_desc, GUIMasterDesc master_desc) {
-	GUIDrawElement::draw(draw_desc, master_desc);
+void GUISelectionGrid::draw(GUIMasterDesc master_desc) {
+	GUIDrawDesc draw_desc;
+	draw_desc._color = _color;
+	draw_desc._width = _width;
+	draw_desc._height = _height;
+	draw_desc._position = _position;
+	Environment::get().get_gui_manager()->draw_element(draw_desc, master_desc);
 
 	master_desc._position.y += _height;
 	master_desc._sub_height = _height;
 
 	Environment::get().get_gui_manager()->draw_text(_title, master_desc);
 
-	GUIIconDesc icon_desc;
-	icon_desc._width = _width / 10.0f;
-	icon_desc._height = _height / 8.0f;
-	icon_desc._position.y -= (icon_desc._height + text_max_height(_title._string) * _title._scale);
-
+	_icon_desc._position.x = 0.0f;
+	_icon_desc._position.y = -(_icon_desc._height + text_max_height(_title._string) * _title._scale);
 	for (const auto icon : _icons) {
-		icon_desc._texture = icon->_texture->_id;
-		icon_desc._highlight = _valid && select_icon(icon_desc, master_desc);
+		_icon_desc._texture = icon->_texture->_id;
+		_icon_desc._highlight = _valid && select_icon(_icon_desc, master_desc);
 
-		Environment::get().get_gui_manager()->draw_icon(icon_desc, master_desc);
+		Environment::get().get_gui_manager()->draw_icon(_icon_desc, master_desc);
 
-		icon_desc._position.x += icon_desc._width;
-		if(icon_desc._position.x > _width - icon_desc._width) {
-			icon_desc._position.x = 0.0f;
-			icon_desc._position.y -= icon_desc._height;
+		_icon_desc._position.x += _icon_desc._width;
+		if(_icon_desc._position.x > _width - _icon_desc._width) {
+			_icon_desc._position.x = 0.0f;
+			_icon_desc._position.y -= _icon_desc._height;
 		}
 	}
 
 }
 
 void GUISelectionGrid::click(GUIMasterDesc master_desc) {
-	GUIIconDesc icon_desc;
-	icon_desc._width = _width / 10.0f;
-	icon_desc._height = _height / 8.0f;
-	icon_desc._position.y -= (icon_desc._height + text_max_height(_title._string) * _title._scale);
+	_icon_desc._position.x = 0.0f;
+	_icon_desc._position.y = -(_icon_desc._height + text_max_height(_title._string) * _title._scale);
 
 	_selection = nullptr;
 	for (const auto icon : _icons) {
-		if(select_icon(icon_desc, master_desc)) {
+		if(select_icon(_icon_desc, master_desc)) {
 			_selection = icon;
+			_view->set_selection(icon->_type, icon->_id);
 		}
 
-		icon_desc._position.x += icon_desc._width;
-		if (icon_desc._position.x > _width - icon_desc._width) {
-			icon_desc._position.x = 0.0f;
-			icon_desc._position.y -= icon_desc._height;
+		_icon_desc._position.x += _icon_desc._width;
+		if (_icon_desc._position.x > _width - _icon_desc._width) {
+			_icon_desc._position.x = 0.0f;
+			_icon_desc._position.y -= _icon_desc._height;
 		}
 	}
 }
@@ -494,6 +506,158 @@ void GUISelectionGrid::add(std::shared_ptr<GUIIcon> icon) {
 	_icons.push_back(icon);
 }
 
+void GUISelectionGrid::set_title(std::string_view title) {
+	_title._string = title;
+}
+
+void GUISelectionGrid::set_view(std::shared_ptr<GUISelectionView> view) {
+	_view = view;
+}
+
+/********************************************************************************************************************************************************/
+
+GUISelectionView::GUISelectionView(float width, float height, glm::vec2 position, glm::vec4 color) :
+	GUIPositionElement(width, height, position, color)
+{}
+
+void GUISelectionView::select(GUIMasterDesc master_desc) {
+	GUISelectElement::select(master_desc);
+}
+
+void GUISelectionView::draw(GUIMasterDesc master_desc) {
+	GUIDrawDesc draw_desc;
+	draw_desc._color = _color;
+	draw_desc._width = _width;
+	draw_desc._height = _height;
+	draw_desc._position = _position;
+	Environment::get().get_gui_manager()->draw_element(draw_desc, master_desc);
+	display_entity_info(master_desc);
+
+	/*
+	if (_selection) {
+		const auto camera = Environment::get().get_window()->get_camera();
+		const auto width = Environment::get().get_window()->get_width();
+		const auto height = Environment::get().get_window()->get_height();
+
+		const float xpos = _position.x + master_desc._position.x + (_width  / 2.0f);
+		const float ypos = _position.y + master_desc._position.y + (_height / 2.0f);
+
+		const glm::vec4 clip_space(xpos, ypos, -1.0f, 1.0f);
+		const glm::mat4 inverse_projection = glm::inverse(camera->get_projection());
+
+		glm::vec4 view_space = inverse_projection * clip_space;
+		view_space.z = -1.0f;
+		view_space.w = 0.0f;
+
+		const glm::mat4 inverse_view = glm::inverse(camera->get_view());
+
+		glm::vec3 world_space = inverse_view * view_space;
+		world_space = glm::normalize(world_space);
+
+		const float x = world_space.x * 5;
+		const float y = world_space.y * 5;
+
+		auto position = camera->get_position();
+		position.x += x;
+		position.y += y;
+		Transform transform;
+		transform.set_position(position);
+		Environment::get().get_resource_manager()->get_model(_selection->get_model_id())->draw(transform);
+	}
+
+	*/
+}
+
+bool GUISelectionView::selected() {
+	return GUISelectElement::selected();
+}
+
+void GUISelectionView::click(GUIMasterDesc master_desc) {
+
+}
+
+void GUISelectionView::set_selection(std::string_view type, unsigned int id) {
+	_selection = Environment::get().get_resource_manager()->get_default_entity(type, id);
+}
+
+void GUISelectionView::set_selection(std::shared_ptr<Entity> entity) {
+	_selection = entity;
+}
+
+void GUISelectionView::display_entity_info(GUIMasterDesc master_desc) {
+	if(!_selection) {
+		return;
+	}
+
+	const auto alignment = _width / 2.0f;
+	float y_space = 0.03f;
+	GUITextDesc text[10];
+	for(unsigned int i = 0; i < 10; ++i) {
+		text[i] = { "", {1, 1, 1, 1}, 0.1f,{_position.x, _position.y + _height - y_space}, 4 };
+	}
+
+	text[0]._string = "Name:";
+	text[1]._position.x = _position.x + alignment;
+	text[1]._string = _selection->get_name();
+
+	text[2]._position.y -= y_space;
+	text[3]._position.y -= y_space;
+	text[2]._string = "Type:";
+	text[3]._position.x = _position.x + alignment;
+	text[3]._string = _selection->get_type();
+
+	y_space += y_space;
+	text[4]._position.y -= y_space;
+	text[5]._position.y -= y_space;
+	text[4]._string = "ID:";
+	text[5]._position.x = _position.x + alignment;
+	text[5]._string = std::to_string(_selection->get_id());
+
+	Environment::get().get_gui_manager()->draw_text(text[0], master_desc);
+	Environment::get().get_gui_manager()->draw_text(text[1], master_desc);
+	Environment::get().get_gui_manager()->draw_text(text[2], master_desc);
+	Environment::get().get_gui_manager()->draw_text(text[3], master_desc);
+	Environment::get().get_gui_manager()->draw_text(text[4], master_desc);
+	Environment::get().get_gui_manager()->draw_text(text[5], master_desc);
+}
+
+/********************************************************************************************************************************************************/
+
+GUIButtonIcon::GUIButtonIcon(std::shared_ptr<GUIIcon> icon, void (*function)(), float width, float height, glm::vec2 position, glm::vec4 color) :
+	GUIPositionElement		( width, height, position, color ),
+	_function				( function )
+{
+	_icon._width = _width;
+	_icon._height = _height;
+	_icon._position = _position;
+	_icon._texture = icon->_texture->_id;
+}
+
+void GUIButtonIcon::select(GUIMasterDesc master_desc) {
+	GUISelectElement::select(master_desc);
+}
+
+void GUIButtonIcon::draw(GUIMasterDesc master_desc) {
+	GUIDrawDesc draw_desc;
+	draw_desc._color = _color;
+	draw_desc._width = _width;
+	draw_desc._height = _height;
+	draw_desc._position = _position;
+
+	Environment::get().get_gui_manager()->draw_element(draw_desc, master_desc);
+	Environment::get().get_gui_manager()->draw_icon(_icon, master_desc);
+}
+
+bool GUIButtonIcon::selected() {
+	return GUISelectElement::selected();
+}
+
+void GUIButtonIcon::click(GUIMasterDesc master_desc) {
+	if (_function) {
+		_function();
+	}
+}
+
 /********************************************************************************************************************************************************/
 
 GUIMaster::GUIMaster(float width, float height, glm::vec2 position, glm::vec4 color) :
@@ -502,9 +666,7 @@ GUIMaster::GUIMaster(float width, float height, glm::vec2 position, glm::vec4 co
 {}
 
 void GUIMaster::update() {
-	GUIMasterDesc master_desc;
-	master_desc._width = GUIPositionElement::_width;
-	master_desc._height = GUIPositionElement::_height;
+	GUISelectElement::select();
 
 	GUIMasterDesc element_master_desc;
 	element_master_desc._width = GUIPositionElement::_width;
@@ -513,7 +675,6 @@ void GUIMaster::update() {
 	element_master_desc._scroll = _scroll;
 	element_master_desc._ypos = GUIPositionElement::_position.y;
 
-	GUISelectElement::select(master_desc);
 	for(const auto element : _elements) {
 		element->select(element_master_desc);
 		element_master_desc._ypos -= std::dynamic_pointer_cast<GUIPositionElement>(element)->_height;
@@ -530,6 +691,12 @@ void GUIMaster::draw(int mode) {
 	const auto screen_space = GUIPositionElement::screen_space();
 	GUIDrawDesc draw_desc;
 	draw_desc._mode = mode;
+	draw_desc._width = GUIPositionElement::_width;
+	draw_desc._height = GUIPositionElement::_height;
+	draw_desc._position = GUIPositionElement::_position;
+	draw_desc._color = GUIPositionElement::_color;
+
+	Environment::get().get_gui_manager()->draw_element(draw_desc);
 
 	GUIMasterDesc master_desc;
 	master_desc._screen_space = screen_space;
@@ -542,15 +709,13 @@ void GUIMaster::draw(int mode) {
 	element_master_desc._ypos = GUIPositionElement::_position.y;
 	element_master_desc._scroll = _scroll;
 
-	GUIDrawElement::draw(draw_desc, master_desc);
-
 	for(const auto element : _elements) {
-		element->draw(draw_desc, element_master_desc);
+		element->draw(element_master_desc);
 		element_master_desc._ypos -= std::dynamic_pointer_cast<GUIPositionElement>(element)->_height;
 	}
 
 	if (_max_scroll - GUIPositionElement::_height > 0) {
-		GUIScrollElement::draw(draw_desc, element_master_desc);
+		GUIScrollElement::draw(element_master_desc);
 	}
 }
 

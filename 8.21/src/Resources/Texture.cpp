@@ -27,7 +27,13 @@ Texture::Texture(int key, const char* file_path) :
 	load_from_file(file_path);
 }
 
-Texture::~Texture() {
+Texture::Texture(const Texture& rhs) :
+	_key			 ( rhs._key ),
+	_id				 ( rhs._id ),
+	_type			 ( rhs._type )
+{}	
+
+void Texture::delete_texture() {
 	glDeleteTextures(1, &_id);
 }
 
@@ -40,6 +46,8 @@ void Texture::load_from_file(const char* file_path) {
 	if (_id == 0) {
 		std::cout << "SOIL RESULT " << SOIL_last_result() << " " << texture_file._texture << '\n';
 	}
+
+	std::cout << "texture id: " << _id << '\n';
 
 	//texture paramenters...
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);

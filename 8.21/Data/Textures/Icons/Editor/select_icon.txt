@@ -1,0 +1,6 @@
+- Select Icon
+
+# Texture
+texture Data\Textures\Icons\Editor\select.png
+
+# Icon

@@ -1,0 +1,5 @@
+- View Shader
+DIR Data\Shaders\View Shader\
+name View Shader
+vertex view shader.vert
+fragment view shader.frag

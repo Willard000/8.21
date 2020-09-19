@@ -1,5 +1,9 @@
 #include "Mesh.h"
 
+#define VIEW_SHADER 7
+
+const glm::mat4 VIEW_PROJECTION = glm::ortho(0, 1, 0, 1);
+
 Mesh::Mesh() {
 }
 
@@ -55,8 +59,8 @@ void Mesh::delete_vao() {
 	glDeleteBuffers(1, &_normal_buffer);
 	glDeleteBuffers(1, &_indices_buffer);
 
-	for (const auto texture : _textures) {
-		glDeleteTextures(1, &texture._id);
+	for (auto& texture : _textures) {
+		texture.delete_texture();
 	}
 }
 
@@ -95,7 +99,6 @@ void Mesh::load_buffers() {
 	}
 }
 
-#include <iostream>
 void Mesh::draw(const GLuint program, Transform& transform, int mode) {
 	glBindVertexArray(_vao);
 	glUseProgram(program);

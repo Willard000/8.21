@@ -1,0 +1,5 @@
+- Texture Shader
+DIR Data\Shaders\Texture Shader\
+name Texture Shader
+vertex texture shader.vert
+fragment texture shader.frag

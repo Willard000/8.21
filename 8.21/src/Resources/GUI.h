@@ -17,6 +17,10 @@ const glm::mat4 GUI_PROJECTION = glm::ortho(0, 1, 0, 1);
 
 struct GUIDrawDesc {
 	int		  _mode = 4;
+	float	  _width = 0.0f;
+	float     _height = 0.0f;
+	glm::vec2 _position = glm::vec2(0, 0);
+	glm::vec4 _color = glm::vec4(0, 0, 0, 1);
 };
 
 struct GUIMasterDesc {
@@ -31,10 +35,10 @@ struct GUIMasterDesc {
 
 struct GUITextDesc {
 	std::string _string;
-	glm::vec4 _color = glm::vec4(1, 1, 1, 1);
-	float _scale = 0.15f;
-	glm::vec2 _position = glm::vec2(0, 0);
-	int _mode = 4;
+	glm::vec4   _color = glm::vec4(1, 1, 1, 1);
+	float       _scale = 0.15f;
+	glm::vec2   _position = glm::vec2(0, 0);
+	int         _mode = 4;
 };
 
 struct GUIIconDesc {
@@ -51,7 +55,7 @@ struct GUIIconDesc {
 class GUIElement {
 public:
 	virtual void select(GUIMasterDesc master_desc = GUIMasterDesc()) = 0;
-	virtual void draw(GUIDrawDesc draw_desc = GUIDrawDesc(), GUIMasterDesc master_desc = GUIMasterDesc()) = 0;
+	virtual void draw(GUIMasterDesc master_desc = GUIMasterDesc()) = 0;
 	virtual bool selected() = 0;
 	virtual void click(GUIMasterDesc master_desc = GUIMasterDesc()) = 0;
 };
@@ -73,22 +77,18 @@ public:
 
 /********************************************************************************************************************************************************/
 
-class GUIDrawElement : virtual public GUIPositionElement {
+class GUIDrawElement {
 public:
 	GUIDrawElement();
-	GUIDrawElement(float width, float height, glm::vec2 position, glm::vec4 color);
 	~GUIDrawElement();
 
 	void draw(GUIDrawDesc draw_desc = GUIDrawDesc(), GUIMasterDesc master_desc = GUIMasterDesc());
 private:
-	void generate_vertex_data();
 	void create_vao();
 
 	GLuint _vao;
 	GLuint _program;
 	GLuint _vertex_buffer;
-
-	std::vector<glm::vec2> _vertex_data;
 };
 
 /********************************************************************************************************************************************************/
@@ -116,7 +116,7 @@ public:
 
 	void scroll(double yoffset);
 
-	void draw(GUIDrawDesc draw_desc, GUIMasterDesc master_desc);
+	void draw(GUIMasterDesc master_desc);
 protected:
 	float _scroll;
 	float _max_scroll;
@@ -194,29 +194,72 @@ private:
 
 /********************************************************************************************************************************************************/
 
-class GUISelectionGrid : virtual public GUIElement, public GUIDrawElement, public GUISelectElement {
+class GUIButtonIcon : virtual public GUIElement, public GUISelectElement {
 public:
-	GUISelectionGrid(float width, float height, glm::vec2 position, glm::vec4 color);
+	GUIButtonIcon(std::shared_ptr<GUIIcon> icon, void (*function)(), float width, float height, glm::vec2 position, glm::vec4 color);
 
 	virtual void select(GUIMasterDesc master_desc = GUIMasterDesc());
-	virtual void draw(GUIDrawDesc draw_desc = GUIDrawDesc(), GUIMasterDesc master_desc = GUIMasterDesc());
+	virtual void draw(GUIMasterDesc master_desc = GUIMasterDesc());
+	virtual bool selected();
+
+	void click(GUIMasterDesc master_desc);
+private:
+	GUIIconDesc _icon;
+	void (*_function)();
+};
+
+/********************************************************************************************************************************************************/
+
+class Entity;
+
+class GUISelectionView : virtual public GUIElement, public GUISelectElement {
+public:
+	GUISelectionView(float width, float height, glm::vec2 position, glm::vec4 color);
+
+	virtual void select(GUIMasterDesc master_desc = GUIMasterDesc());
+	virtual void draw(GUIMasterDesc master_desc = GUIMasterDesc());
 	virtual bool selected();
 
 	void click(GUIMasterDesc master_desc);
 
+	void set_selection(std::string_view type, unsigned int id);
+	void set_selection(std::shared_ptr<Entity> entity);
+
+	void display_entity_info(GUIMasterDesc master_desc = GUIMasterDesc());
+private:
+	std::shared_ptr<Entity> _selection;
+};
+
+/********************************************************************************************************************************************************/
+
+class GUISelectionGrid : virtual public GUIElement, public GUISelectElement {
+public:
+	GUISelectionGrid(float width, float height, glm::vec2 position, glm::vec4 color);
+
+	virtual void select(GUIMasterDesc master_desc = GUIMasterDesc());
+	virtual void draw(GUIMasterDesc master_desc = GUIMasterDesc());
+	virtual bool selected();
+
+	void click(GUIMasterDesc master_desc);
+
+	void set_title(std::string_view title);
 	void add(std::shared_ptr<GUIIcon> icon);
 	std::shared_ptr<GUIIcon> get_selection();
+
+	void set_view(std::shared_ptr<GUISelectionView> view);
 private:
 	GUIIconDesc _icon_desc;
 	GUITextDesc _title;
 	std::shared_ptr<GUIIcon> _selection;
+
+	std::shared_ptr<GUISelectionView> _view;
 
 	std::vector<std::shared_ptr<GUIIcon>> _icons;
 };
 
 /********************************************************************************************************************************************************/
 
-class GUIMaster : virtual public GUIDrawElement, virtual public GUISelectElement, virtual public GUIScrollElement {
+class GUIMaster : virtual public GUISelectElement, virtual public GUIScrollElement {
 public:
 	GUIMaster(float width, float height, glm::vec2 position, glm::vec4 color);
 

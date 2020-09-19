@@ -1,0 +1,8 @@
+- Test Icon
+
+# Texture
+texture Data\Textures\Icons\tree_icon.png
+
+# Icon
+id 1
+type Object

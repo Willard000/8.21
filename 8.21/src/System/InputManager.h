@@ -3,6 +3,12 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
+#define EDITOR_EDIT_TERRAIN 0
+#define EDITOR_PLACE_ENTITY 1
+#define EDITOR_SELECT_ENTITY 2
+
+/********************************************************************************************************************************************************/
+
 struct GLFWwindow;
 
 class InputManager {
@@ -21,6 +27,8 @@ protected:
 	double _ypos;
 };
 
+/********************************************************************************************************************************************************/
+
 class GameInputManager : public InputManager {
 public:
 	GameInputManager();
@@ -35,6 +43,8 @@ public:
 private:
 };
 
+/********************************************************************************************************************************************************/
+
 class EditorInputManager : public InputManager {
 public:
 	EditorInputManager();
@@ -42,11 +52,16 @@ public:
 
 	void update(bool* exit);
 
+	void set_mode(int mode);
+
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 	static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
 	static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 private:
+	int _mode;
 };
+
+/********************************************************************************************************************************************************/
 
 #endif

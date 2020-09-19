@@ -163,6 +163,7 @@
     <ClCompile Include="src\System\Engine.cpp" />
     <ClCompile Include="src\System\Environment.cpp" />
     <ClCompile Include="src\System\gl3w.c" />
+    <ClCompile Include="src\System\GUIFunctions.cpp" />
     <ClCompile Include="src\System\GUIManager.cpp" />
     <ClCompile Include="src\System\InputManager.cpp" />
     <ClCompile Include="src\System\Main.cpp" />
@@ -188,6 +189,7 @@
     <ClInclude Include="src\System\Editor.h" />
     <ClInclude Include="src\System\Engine.h" />
     <ClInclude Include="src\System\Environment.h" />
+    <ClInclude Include="src\System\GUIFunctions.h" />
     <ClInclude Include="src\System\GUIManager.h" />
     <ClInclude Include="src\System\InputManager.h" />
     <ClInclude Include="src\System\ResourceManager.h" />

@@ -1,0 +1,6 @@
+- Place Icon
+
+# Texture
+texture Data\Textures\Icons\Editor\place.png
+
+# Icon

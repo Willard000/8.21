@@ -60,6 +60,12 @@ void Model::draw(Transform& transform) {
 	}
 }
 
+void Model::draw(Transform& transform, GLuint program) {
+	for (auto& mesh : _meshes) {
+		mesh.draw(program, transform);
+	}
+}
+
 bool Model::load_from_file(const char* file_path) {
 	ReadModelFile model_file(file_path);
 	bool loaded = false;

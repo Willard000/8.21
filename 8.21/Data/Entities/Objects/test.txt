@@ -1,0 +1,9 @@
+- Tree
+
+# Entity
+model_id 1
+str_name Test
+
+# Transform
+speed 1.0
+scale 0.5 0.5 0.5

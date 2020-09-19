@@ -30,6 +30,7 @@ public:
 	~Model();
 
 	void draw(Transform& transform);
+	void draw(Transform& transform, GLuint program);
 
 	std::shared_ptr<Program> get_program();
 private:

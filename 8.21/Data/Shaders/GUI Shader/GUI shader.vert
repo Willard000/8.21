@@ -6,7 +6,10 @@ uniform mat4 projection;
 uniform mat4 view;
 
 uniform vec2 position;
+uniform float width;
+uniform float height;
 
 void main() {
-	gl_Position = projection * vec4(vertex + position, 0, 1);
+	vec2 f_vertex = vec2(vertex.x * width + position.x, vertex.y * height + position.y);
+	gl_Position = projection * vec4(f_vertex, 0, 1);
 }
