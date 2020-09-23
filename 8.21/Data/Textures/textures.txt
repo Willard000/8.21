@@ -6,4 +6,5 @@
 2 Data\Textures\Icons\Editor\place_icon.txt
 
 100 Data\Textures\Icons\tree_icon.txt
-101 Data\Textures\Icons\test_icon.txt
+101 Data\Textures\Icons\clay rock.txt
+102 Data\Textures\Icons\box.txt

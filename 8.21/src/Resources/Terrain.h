@@ -28,6 +28,16 @@ struct TileHeight {
 		}
 		return true;
 	}
+
+	GLfloat min_height() {
+		GLfloat min = height[0];
+		for(unsigned int i = 1; i < 4; ++i) {
+			if(height[i] < min) {
+				min = height[i];
+			}
+		}
+		return min;
+	}
 };
 
 /********************************************************************************************************************************************************/
@@ -57,6 +67,12 @@ public:
 	bool valid_left_index(int index);
 	bool valid_right_index(int index);
 	void update_vao();
+
+	bool is_valid_tile();
+
+	bool test_ray_height(glm::vec3 world_space, glm::vec3 position);
+	bool ray_above_terrain(glm::vec3 world_space, glm::vec3 position, float height);
+	float exact_height(float x, float z);
 protected:
 	int _x;
 	int _z;
@@ -77,20 +93,23 @@ private:
 
 /********************************************************************************************************************************************************/
 
-class TerrainEntities : virtual public TerrainData {
+class TerrainEntities : virtual public TileSelection, virtual public TerrainData {
 public:
 	TerrainEntities();
 
-	void add_entity(std::shared_ptr<Entity> entity, int tile_x, int tile_z);
-	void remove_entity(int tile_x, int tile_z);
-	void adjust_entity_height(int tile_x, int tile_z);
+	void add_entity(std::shared_ptr<Entity> entity);
+	std::shared_ptr<Entity> remove_entity();
+	std::shared_ptr<Entity> get_entity();
+	void adjust_entity_height();
+
+	bool is_empty_tile();
 protected:
 	std::vector<std::shared_ptr<Entity>> _entities;
 };
 
 /********************************************************************************************************************************************************/
 
-class Terrain : public TileSelection, public TerrainEntities, virtual public TerrainData {
+class Terrain : virtual public TileSelection, public TerrainEntities, virtual public TerrainData {
 public:
 	Terrain(int width, int length, float tile_width, float tile_length);
 	~Terrain();
@@ -109,8 +128,6 @@ public:
 	float get_tile_length();
 	TileHeight get_tile_height(int x, int z);
 	float get_vertex_height(int index, int vertex);
-
-	TileSelection* get_tile_selection();
 private:
 	void generate_vertex_data();
 	void generate_uv_data();

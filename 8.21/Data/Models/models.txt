@@ -1,3 +1,4 @@
 # Models
 0 Data\Models\Tree\tree.txt
-1 Data\Models\bridge\bridge.txt
+1 Data\Models\Clay Rock\clay rock.txt
+2 Data\Models\Box\box.txt

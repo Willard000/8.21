@@ -52,6 +52,7 @@ public:
 
 	void update(bool* exit);
 
+	int get_mode();
 	void set_mode(int mode);
 
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);

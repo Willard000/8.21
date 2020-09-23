@@ -30,7 +30,12 @@ TerrainData::TerrainData() :
 
 /********************************************************************************************************************************************************/
 
-TileSelection::TileSelection() {
+TileSelection::TileSelection() :
+	_x				 ( 0 ),
+	_z				 ( 0 ),
+	_index			 ( 0 ),
+	_valid_index	 ( false )
+{
 	_vertex_data.reserve(6);
 	_vertex_data.push_back(glm::vec3(_tile_width, 0.01f, 0.0f));
 	_vertex_data.push_back(glm::vec3(0.0f, 0.01f, 0.0f));
@@ -121,46 +126,141 @@ bool TileSelection::valid_right_index(int index) {
 	return (index / _width == (index - 1) / _width);
 }
 
+bool TileSelection::is_valid_tile() {
+	return _valid_index;
+}
+
+bool TileSelection::test_ray_height(glm::vec3 world_space, glm::vec3 position) {
+
+	float height = position.y;
+	const float increment = height > 1.0f ? height * 0.01f : 0.01f;
+
+	while (ray_above_terrain(world_space, position, height)) {
+		height -= increment;
+	}
+
+	const float y = abs((position.y - height) / world_space.y);
+	const float x = (y * world_space.x + position.x) / _tile_width;
+	const float z = (y * world_space.z + position.z) / _tile_length;
+
+	select((int)x, (int)z);
+
+	return false;
+}
+
+bool TileSelection::ray_above_terrain(glm::vec3 world_space, glm::vec3 position, float height) {
+	const float y = abs((position.y - height) / world_space.y);
+	const float x = (y * world_space.x + position.x) / _tile_width;
+	const float z = (y * world_space.z + position.z) / _tile_length;
+
+	const float terrain_height = exact_height(x, z);
+
+	if(height > terrain_height) {
+		return true;
+	}
+
+	return false;
+}
+
+float TileSelection::exact_height(float x, float z) {
+	if(x < 0.0f || x >= _width || z < 0.0f || z >= _length) {
+		return 0.0f;
+	}
+
+	const int index = (int)z * _width + (int)x;
+	if(_height_map[index].is_flat()) {
+		return _height_map[index].height[0];
+	}
+
+	const float width_y = _height_map[index].height[1] - _height_map[index].height[0];
+	const float length_y = _height_map[index].height[2] - _height_map[index].height[0];
+	const float min_height = _height_map[index].min_height();
+
+	const bool left_to_right = width_y > 0.0f;
+	const bool bottom_to_top = length_y > 0.0f;
+
+	float height_x = 0.0f;
+	float height_z = 0.0f;
+	if(!left_to_right) {
+		height_x = (1.0f - (float(x - int(x)))) * abs(width_y);
+	}
+	else {
+		height_x = (float(x - int(x))) * abs(width_y);
+	}
+
+	if(!bottom_to_top) {
+		height_z = (1.0f - (float(z - int(z)))) * abs(length_y);
+	}
+	else {
+		height_z = (float(z - int(z))) * abs(length_y);
+	}
+
+	if(width_y != 0) {
+		height_x += min_height;
+	}
+	if(length_y != 0) {
+		height_z += min_height;
+	};
+
+	return height_x + height_z;;
+}
+
 /********************************************************************************************************************************************************/
 
 TerrainEntities::TerrainEntities() {
 	_entities.resize(_width * _length);
 }
 
-void TerrainEntities::add_entity(std::shared_ptr<Entity> entity, int tile_x, int tile_z) {
-	const int index = tile_x + (tile_z * _width);
-	if (index < 0 || index >= _height_map.size()) {
+void TerrainEntities::add_entity(std::shared_ptr<Entity> entity) {
+	if(!_valid_index) {
 		return;
 	}
 
-	_entities[index] = entity;
+	_entities[_index] = entity;
 
 	const auto transform = entity->get<TransformComponent>();
-	transform->_transform.set_position(glm::vec3(tile_x + _tile_width / 2, _height_map[index].height[0], tile_z + _tile_length / 2));
+	transform->_transform.set_position(glm::vec3(_x + _tile_width / 2, _height_map[_index].min_height(), _z + _tile_length / 2));
 }
 
-void TerrainEntities::remove_entity(int tile_x, int tile_z) {
-	const int index = tile_x + (tile_z * _width);
-	if (index < 0 || index >= _height_map.size()) {
+std::shared_ptr<Entity> TerrainEntities::remove_entity() {
+	if(!_valid_index) {
+		return nullptr;
+	}
+
+	const auto entity = _entities[_index];
+	_entities[_index] = nullptr;
+	return entity;
+}
+
+std::shared_ptr<Entity> TerrainEntities::get_entity() {
+	if(!_valid_index) {
+		return nullptr;
+	}
+
+	return _entities[_index];
+}
+
+void TerrainEntities::adjust_entity_height() {
+	if(!_valid_index) {
 		return;
 	}
 
-	_entities[index] = nullptr;
-}
-
-void TerrainEntities::adjust_entity_height(int tile_x, int tile_z) {
-	const int index = tile_x + (tile_z * _width);
-	if (index < 0 || index >= _height_map.size()) {
-		return;
-	}
-
-	const auto entity = _entities[index];
+	const auto entity = _entities[_index];
 	if(!entity) {
 		return;
 	}
 
 	const auto transform = entity->get<TransformComponent>();
-	transform->_transform.set_position(glm::vec3(tile_x + _tile_width / 2, _height_map[index].height[0], tile_z + _tile_length / 2));
+	transform->_transform.set_position(glm::vec3(_x + _tile_width / 2, _height_map[_index].min_height(), _z + _tile_length / 2));
+
+}
+
+bool TerrainEntities::is_empty_tile() {
+	if(!_valid_index) {
+		return false;
+	}
+
+	return _entities[_index] == nullptr ? true : false;
 }
 
 /********************************************************************************************************************************************************/
@@ -294,7 +394,7 @@ void Terrain::adjust_tile_height(float height) {
 
 	update_vao();
 
-	adjust_entity_height(_x, _z);
+	adjust_entity_height();
 }
 
 void Terrain::adjust_ramp_height() {
@@ -404,7 +504,7 @@ void Terrain::adjust_left_ramp() {
 }
 
 void Terrain::adjust_vertex_height(int index, int vertex, float height) {
-	if(index < 0 || index >= _height_map.size() ||
+	if(index < 0 || index >= (int)_height_map.size() ||
 	   vertex < 0 || vertex > 3) {
 		return;
 	}
@@ -501,7 +601,7 @@ TileHeight Terrain::get_tile_height(int x, int z) {
 }
 
 float Terrain::get_vertex_height(int index, int vertex) {
-	if(index < 0 || index > _height_map.size() ||
+	if(index < 0 || index > (int)_height_map.size() ||
 	   vertex < 0 || vertex > 3) {
 		return 0.0f;
 	}

@@ -1,4 +1,4 @@
-- Test Icon
+- Clay Rock Icon
 
 # Texture
 texture Data\Textures\Icons\tree_icon.png

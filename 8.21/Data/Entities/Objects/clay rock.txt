@@ -1,0 +1,7 @@
+- Tree
+
+# Entity
+model_id 1
+str_name Clay Rock
+
+# Transform
