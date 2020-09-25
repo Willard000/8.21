@@ -22,9 +22,14 @@ public:
 	double get_mouse_y();
 
 	glm::vec3 get_mouse_world_space_vector();
+
+	int get_mode();
+	void set_mode(int mode);
 protected:
 	double _xpos;
 	double _ypos;
+
+	int _mode;
 };
 
 /********************************************************************************************************************************************************/
@@ -52,15 +57,11 @@ public:
 
 	void update(bool* exit);
 
-	int get_mode();
-	void set_mode(int mode);
-
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 	static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
 	static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 private:
-	int _mode;
 };
 
 /********************************************************************************************************************************************************/

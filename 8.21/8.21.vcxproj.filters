@@ -188,5 +188,8 @@
     <ClInclude Include="src\System\GUIFunctions.h">
       <Filter>Header Files\System</Filter>
     </ClInclude>
+    <ClInclude Include="src\Utility\Collision.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

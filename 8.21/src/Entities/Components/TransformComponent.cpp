@@ -4,6 +4,7 @@
 
 #include "../src/System/Environment.h"
 #include "../src/Utility/Clock.h"
+#include "../src/System/ResourceManager.h"
 
 #include "../src/Utility/FileReader.h"
 
@@ -37,7 +38,11 @@ TransformComponent::TransformComponent(std::shared_ptr<Entity> entity, glm::vec3
 	_direction				( glm::vec3(0, 0, 0) ),
 	_y_rot					( 0 ),
 	_turn					( 0 )
-{}
+{
+	const auto c_box = Environment::get().get_resource_manager()->get_model(_entity->get_model_id())->get_collision_box();
+	_collision_box.min = _transform.get_scale() * c_box.min;
+	_collision_box.max = _transform.get_scale() * c_box.max;
+}
 
 TransformComponent::TransformComponent(std::shared_ptr<Entity> new_entity, const TransformComponent& rhs) :
 	Component				( new_entity ),
@@ -46,7 +51,8 @@ TransformComponent::TransformComponent(std::shared_ptr<Entity> new_entity, const
 	_collidable				( rhs._collidable),
 	_direction				( rhs._direction ),
 	_y_rot					( rhs._y_rot ),
-	_turn					( rhs._turn )
+	_turn					( rhs._turn ),
+	_collision_box			( rhs._collision_box )
 {}
 
 std::shared_ptr<Component> TransformComponent::copy(std::shared_ptr<Entity> new_entity) const {

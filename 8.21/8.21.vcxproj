@@ -194,6 +194,7 @@
     <ClInclude Include="src\System\InputManager.h" />
     <ClInclude Include="src\System\ResourceManager.h" />
     <ClInclude Include="src\Utility\Clock.h" />
+    <ClInclude Include="src\Utility\Collision.h" />
     <ClInclude Include="src\Utility\FileReader.h" />
     <ClInclude Include="src\Utility\Timer.h" />
   </ItemGroup>

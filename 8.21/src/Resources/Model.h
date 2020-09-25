@@ -12,6 +12,11 @@ class Transform;
 
 typedef unsigned int GLuint;
 
+struct CollisionBox {
+	glm::vec3 min;
+	glm::vec3 max;
+};
+
 struct ReadModelFile {
 public:
 	ReadModelFile(const char* file_path);
@@ -32,6 +37,9 @@ public:
 	void draw(Transform& transform);
 	void draw(Transform& transform, GLuint program);
 
+	CollisionBox get_collision_box();
+	void make_collision_box();
+
 	std::shared_ptr<Program> get_program();
 private:
 	bool load_from_file(const char* file_path);
@@ -40,6 +48,7 @@ private:
 	int _id;
 	std::shared_ptr<Program> _program;
 	std::vector<Mesh> _meshes;
+	CollisionBox _collision_box;
 };
 
 #endif

@@ -45,6 +45,8 @@ public:
 
 	bool _collidable;
 
+	CollisionBox _collision_box;
+
 };
 
 #endif

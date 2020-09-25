@@ -34,18 +34,21 @@ Model::Model(std::shared_ptr<Program> program, std::string_view directory, std::
 	_program		( program )
 {
 	load_assimp(directory, model_file);
+	make_collision_box();
 }
 
 Model::Model(int id, std::string_view file_path) :
 	_id				( id )
 {
 	load_from_file(file_path.data());
+	make_collision_box();
 }
 
 Model::Model(const Model& rhs) :
 	_id				( rhs._id ),
 	_program		( rhs._program ),
-	_meshes			( rhs._meshes ) 
+	_meshes			( rhs._meshes ),
+	_collision_box	( rhs._collision_box )
 {}
 
 Model::~Model() {
@@ -172,4 +175,38 @@ bool Model::load_assimp(std::string_view directory, std::string_view model_file)
 	}
 
 	return true;
+}
+
+CollisionBox Model::get_collision_box() {
+	return _collision_box;
+}
+
+float two_decimals(float num) {
+	num = (int)(num * 100.0f + .5f);
+	return num / 100;
+}
+
+void Model::make_collision_box() {
+	if (_meshes.size() > 0 && _meshes[0]._vertices.size() > 0) {
+		_collision_box.min = _meshes[0]._vertices[0];
+		_collision_box.max = _meshes[0]._vertices[0];
+	}
+
+	for(auto& mesh : _meshes) {
+		for(auto v : mesh._vertices) {
+			if (v.x < _collision_box.min.x) _collision_box.min.x = v.x;
+			if (v.y < _collision_box.min.y) _collision_box.min.y = v.y;
+			if (v.z < _collision_box.min.z) _collision_box.min.z = v.z;
+			if (v.x > _collision_box.max.x) _collision_box.max.x = v.x;
+			if (v.y > _collision_box.max.y) _collision_box.max.y = v.y;
+			if (v.z > _collision_box.max.z) _collision_box.max.z = v.z;
+		}
+	}
+
+	_collision_box.min.x = two_decimals(_collision_box.min.x);
+	_collision_box.min.y = two_decimals(_collision_box.min.y);
+	_collision_box.min.z = two_decimals(_collision_box.min.z);
+	_collision_box.max.x = two_decimals(_collision_box.max.x);
+	_collision_box.max.y = two_decimals(_collision_box.max.y);
+	_collision_box.max.z = two_decimals(_collision_box.max.z);
 }

@@ -6,4 +6,3 @@ str_name Tree
 
 # Transform
 speed 1.0
-scale 0.5 0.5 0.5

@@ -92,7 +92,6 @@ public:
 	void load_default_entities();
 
 	std::shared_ptr<Entity> new_entity(std::string_view type, int id);
-
 	std::shared_ptr<Entity> get_default_entity(std::string_view type, unsigned int id);
 protected:
 	std::vector<std::shared_ptr<Entity>> _entities;

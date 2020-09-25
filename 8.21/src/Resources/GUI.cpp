@@ -12,6 +12,7 @@
 
 #include "../src/Resources/Texture.h"
 #include "../src/Resources/Camera.h"
+#include "../src/Resources/Terrain.h"
 
 #include "../src/Entities/Entity.h"
 
@@ -533,39 +534,14 @@ void GUISelectionView::draw(GUIMasterDesc master_desc) {
 	Environment::get().get_gui_manager()->draw_element(draw_desc, master_desc);
 	display_entity_info(master_desc);
 
-	/*
-	if (_selection) {
-		const auto camera = Environment::get().get_window()->get_camera();
-		const auto width = Environment::get().get_window()->get_width();
-		const auto height = Environment::get().get_window()->get_height();
+	if(_selection && Environment::get().get_input_manager()->get_mode() == EDITOR_PLACE_ENTITY) {
+		const auto terrain = Environment::get().get_resource_manager()->get_terrain();
+		const auto position = terrain->entity_placement();
 
-		const float xpos = _position.x + master_desc._position.x + (_width  / 2.0f);
-		const float ypos = _position.y + master_desc._position.y + (_height / 2.0f);
-
-		const glm::vec4 clip_space(xpos, ypos, -1.0f, 1.0f);
-		const glm::mat4 inverse_projection = glm::inverse(camera->get_projection());
-
-		glm::vec4 view_space = inverse_projection * clip_space;
-		view_space.z = -1.0f;
-		view_space.w = 0.0f;
-
-		const glm::mat4 inverse_view = glm::inverse(camera->get_view());
-
-		glm::vec3 world_space = inverse_view * view_space;
-		world_space = glm::normalize(world_space);
-
-		const float x = world_space.x * 5;
-		const float y = world_space.y * 5;
-
-		auto position = camera->get_position();
-		position.x += x;
-		position.y += y;
-		Transform transform;
-		transform.set_position(position);
-		Environment::get().get_resource_manager()->get_model(_selection->get_model_id())->draw(transform);
+		const auto& model = Environment::get().get_resource_manager()->get_model(_selection->get_model_id());
+		Transform transform(position);
+		model->draw(transform);
 	}
-
-	*/
 }
 
 bool GUISelectionView::selected() {

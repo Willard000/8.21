@@ -17,17 +17,25 @@
 
 constexpr float SCROLL_SPEED = 50000.0f;
 
+#include <iostream>
+void select_entity() {
+	const auto terrain = Environment::get().get_resource_manager()->get_terrain();
+	const auto world_space = Environment::get().get_input_manager()->get_mouse_world_space_vector();
+	const auto camera = Environment::get().get_window()->get_camera();
+
+	const auto entity = terrain->select_entity(world_space, camera->get_position());
+
+	if (entity) {
+		std::cout << entity->get_name() << '\n';
+	}
+}
+
 void select_tile() {
 	const auto terrain = Environment::get().get_resource_manager()->get_terrain();
 	const auto world_space = Environment::get().get_input_manager()->get_mouse_world_space_vector();
 	const auto camera = Environment::get().get_window()->get_camera();
-	const float y_diff = abs(camera->get_position().y / world_space.y);
-	const int tile_x = int((y_diff * world_space.x + camera->get_position().x) / terrain->get_tile_width());
-	const int tile_z = int((y_diff * world_space.z + camera->get_position().z) / terrain->get_tile_length());
 
-	//terrain->select(tile_x, tile_z);
-
-	terrain->test_ray_height(world_space, camera->get_position());
+	terrain->select(world_space, camera->get_position());
 }
 
 void place_entity() {
@@ -42,9 +50,6 @@ void place_entity() {
 	const auto terrain = Environment::get().get_resource_manager()->get_terrain();
 	const auto world_space = Environment::get().get_input_manager()->get_mouse_world_space_vector();
 	const auto camera = Environment::get().get_window()->get_camera();
-	const float y_diff = abs(camera->get_position().y / world_space.y);
-	const int tile_x = int((y_diff * world_space.x + camera->get_position().x) / terrain->get_tile_width());
-	const int tile_z = int((y_diff * world_space.z + camera->get_position().z) / terrain->get_tile_length());
 
 	if (terrain->is_valid_tile() && terrain->is_empty_tile()) {
 		const auto entity = resource_manager->new_entity(selection->_type, selection->_id);
@@ -56,7 +61,8 @@ void place_entity() {
 
 InputManager::InputManager() :
 	_xpos			( 0.0 ),
-	_ypos			( 0.0 )
+	_ypos			( 0.0 ),
+	_mode			( 0 )
 {}
 
 InputManager::~InputManager()
@@ -92,6 +98,14 @@ glm::vec3 InputManager::get_mouse_world_space_vector() {
 	world_space = glm::normalize(world_space);
 
 	return world_space;
+}
+
+void InputManager::set_mode(int mode) {
+	_mode = mode;
+}
+
+int InputManager::get_mode() {
+	return _mode;
 }
 
 /********************************************************************************************************************************************************/
@@ -203,9 +217,9 @@ void GameInputManager::mouse_button_callback(GLFWwindow* window, int button, int
 
 /********************************************************************************************************************************************************/
 
-EditorInputManager::EditorInputManager() :
-	_mode		( EDITOR_EDIT_TERRAIN )
-{
+EditorInputManager::EditorInputManager() {
+	_mode = EDITOR_EDIT_TERRAIN;
+
 	auto window = Environment::get().get_window()->get_glfw_window();
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetScrollCallback(window, scroll_callback);
@@ -313,7 +327,7 @@ void EditorInputManager::mouse_button_callback(GLFWwindow* window, int button, i
 	}
 
 	const bool GUI_selected = Environment::get().get_gui_manager()->selected();
-	const int mode = static_cast<EditorInputManager*>(Environment::get().get_input_manager())->get_mode();
+	const int mode = Environment::get().get_input_manager()->get_mode();
 
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
 		if(GUI_selected) {
@@ -322,26 +336,21 @@ void EditorInputManager::mouse_button_callback(GLFWwindow* window, int button, i
 		else if (mode == EDITOR_EDIT_TERRAIN) {
 			Environment::get().get_resource_manager()->get_terrain()->adjust_tile_height(1);
 		}
+		else if (mode == EDITOR_SELECT_ENTITY) {
+			select_entity();
+		}
+		else if (mode == EDITOR_PLACE_ENTITY) {
+			place_entity();
+		}
 	}
 	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
 		if (GUI_selected) {
 
 		}
-		else if(mode == EDITOR_EDIT_TERRAIN) {
+		else if (mode == EDITOR_EDIT_TERRAIN) {
 			Environment::get().get_resource_manager()->get_terrain()->adjust_ramp_height();
 		}
-		else if(mode == EDITOR_PLACE_ENTITY) {
-			place_entity();
-		}
 	}
-}
-
-void EditorInputManager::set_mode(int mode) {
-	_mode = mode;
-}
-
-int EditorInputManager::get_mode() {
-	return _mode;
 }
 
 /********************************************************************************************************************************************************/
