@@ -36,6 +36,7 @@ void select_tile() {
 	const auto camera = Environment::get().get_window()->get_camera();
 
 	terrain->select(world_space, camera->get_position());
+	terrain->select_entity_index();
 }
 
 void place_entity() {
@@ -51,7 +52,7 @@ void place_entity() {
 	const auto world_space = Environment::get().get_input_manager()->get_mouse_world_space_vector();
 	const auto camera = Environment::get().get_window()->get_camera();
 
-	if (terrain->is_valid_tile() && terrain->is_empty_tile()) {
+	if (terrain->is_valid_tile() && terrain->is_empty_tile() && terrain->is_valid_entity_placement()) {
 		const auto entity = resource_manager->new_entity(selection->_type, selection->_id);
 		terrain->add_entity(entity);
 	}

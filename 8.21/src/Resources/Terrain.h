@@ -58,7 +58,7 @@ protected:
 /********************************************************************************************************************************************************/
 
 enum {
-	HEIGHT_TOP, HEIGHT_BOTTOM, HEIGHT_LEFT, HEIGHT_RIGHT, HEIGHT_TOP_LEFT, HEIGHT_BOTTOM_LEFT, HEIGHT_TOP_RIGHT, HEIGHT_BOTTOM_RIGHT, HEIGHT_CENTER
+	CENTER, TOP, BOTTOM, LEFT, RIGHT, TOP_LEFT, BOTTOM_LEFT, TOP_RIGHT, BOTTOM_RIGHT, TOTAL_POSITIONS
 };
 
 class TileSelection : virtual public TerrainData {
@@ -80,23 +80,16 @@ public:
 	float exact_height(float x, float z);
 
 	glm::vec2 get_selected_tile();
-
-	void entity_tile_index(float x, float z);
-	void entity_height_case(int x_height_case, int z_height_case);
-	float entity_tile_height(int height_case);
-	float max_tile_height(int i, int i2, int i3, int i4);
 protected:
 	int _x;
 	int _z;
 
+	float _xf;
+	float _zf;
+
 	int _index;
 
 	bool _valid_index;
-
-	int _entity_x_index;
-	int _entity_z_index;
-	int _entity_tile_index;
-	int _entity_height_case;
 private:
 	void create_vao();
 private:
@@ -113,7 +106,30 @@ private:
 
 /********************************************************************************************************************************************************/
 
-class TerrainEntities : virtual public TileSelection, virtual public TerrainData {
+class TerrainEntityPlacement : virtual public TileSelection, virtual public TerrainData {
+public:
+	void select_entity_index();
+	void entity_position(int x_position, int z_position);
+	float entity_tile_height(int index, int position, bool* valid_placement = nullptr);
+	float max_tile_height(int i, int i2, int i3, int i4);
+	int entity_index(int x, int z, int position);
+
+	bool is_valid_ramp_placement(int position, const GLfloat* center, const GLfloat* horizontal, const GLfloat* vertical, const GLfloat* diagonal);
+	bool is_valid_entity_placement();
+	bool is_valid_entity_index(int index);
+protected:
+	int _entity_x_index;
+	int _entity_z_index;
+	int _entity_index;
+	int _entity_position;
+	bool _valid_entity_placement;
+
+	bool _valid_entity_index;
+};
+
+/********************************************************************************************************************************************************/
+
+class TerrainEntities : virtual public TerrainEntityPlacement, virtual public TileSelection, virtual public TerrainData {
 public:
 	TerrainEntities();
 

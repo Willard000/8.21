@@ -133,7 +133,6 @@ bool TileSelection::is_valid_tile() {
 	return _valid_index;
 }
 
-#include <iostream>
 bool TileSelection::select(glm::vec3 world_space, glm::vec3 position) {
 
 	float height = position.y;
@@ -147,7 +146,9 @@ bool TileSelection::select(glm::vec3 world_space, glm::vec3 position) {
 	const float x = (y * world_space.x + position.x) / _tile_width;
 	const float z = (y * world_space.z + position.z) / _tile_length;
 
-	entity_tile_index(x, z);
+	_xf = x;
+	_zf = z;
+
 	select((int)x, (int)z);
 
 	return false;
@@ -214,145 +215,215 @@ glm::vec2 TileSelection::get_selected_tile() {
 	return glm::vec2(_x, _z);
 }
 
-void TileSelection::entity_tile_index(float x, float z) {
+
+/********************************************************************************************************************************************************/
+
+void TerrainEntityPlacement::select_entity_index() {
 	int x_index = 0;
 	int z_index = 0;
 
-	int x_height_case = 0;
-	int z_height_case = 0;
+	int x_position = 0;
+	int z_position = 0;
 
-	float decimal = x - (int)x;
+	float decimal = _xf - _x;
 	if (decimal < .25f) {
-		x_index = (int)x * 2;
-		x_height_case = HEIGHT_LEFT;
+		x_index = _x * 2;
+		x_position = LEFT;
 	}
 	else if (decimal >= .25f && decimal < .75f) {
-		x_index = 1 + (int)x * 2;
-		x_height_case = HEIGHT_CENTER;
+		x_index = 1 + _x * 2;
+		x_position = CENTER;
 	}
 	else if (decimal >= .75f && decimal < 1.0f) {
-		x_index = ((int)x + 1) * 2;
-		x_height_case = HEIGHT_RIGHT;
+		x_index = (_x + 1) * 2;
+		x_position = RIGHT;
 	}
 
-	decimal = z - (int)z;
+	decimal = _zf - _z;
 	if (decimal < .25f) {
-		z_index = (int)z * 2;
-		z_height_case = HEIGHT_TOP;
+		z_index = _z * 2;
+		z_position = TOP;
 	}
 	else if (decimal >= .25f && decimal < .75f) {
-		z_index = 1 + (int)z * 2;
-		z_height_case = HEIGHT_CENTER;
+		z_index = 1 + _z * 2;
+		z_position = CENTER;
 	}
 	else if (decimal >= .75f && decimal < 1.0f) {
-		z_index = ((int)z + 1) * 2;
-		z_height_case = HEIGHT_BOTTOM;
+		z_index = (_z + 1) * 2;
+		z_position = BOTTOM;
 	}
 
 	_entity_x_index = x_index;
 	_entity_z_index = z_index;
-	_entity_tile_index = z_index * _width + x_index;
+	_entity_index = z_index * _width + x_index;
 
-	entity_height_case(x_height_case, z_height_case);
+	entity_position(x_position, z_position);
+	entity_tile_height(_index, _entity_position, &_valid_entity_placement);
 }
 
-void TileSelection::entity_height_case(int x_height_case, int z_height_case) {
-	if (x_height_case == HEIGHT_CENTER) {
-		_entity_height_case = z_height_case;
+void TerrainEntityPlacement::entity_position(int x_position, int z_position) {
+	if (x_position == CENTER) {
+		_entity_position = z_position;
 	}
-	else if (z_height_case == HEIGHT_CENTER) {
-		_entity_height_case = x_height_case;
+	else if (z_position == CENTER) {
+		_entity_position = x_position;
 	}
-	else if (x_height_case == HEIGHT_LEFT && z_height_case == HEIGHT_TOP) {
-		_entity_height_case = HEIGHT_TOP_LEFT;
+	else if (x_position == LEFT && z_position == TOP) {
+		_entity_position = TOP_LEFT;
 	}
-	else if (x_height_case == HEIGHT_LEFT && z_height_case == HEIGHT_BOTTOM) {
-		_entity_height_case = HEIGHT_BOTTOM_LEFT;
+	else if (x_position == LEFT && z_position == BOTTOM) {
+		_entity_position = BOTTOM_LEFT;
 	}
-	else if (x_height_case == HEIGHT_RIGHT && z_height_case == HEIGHT_TOP) {
-		_entity_height_case = HEIGHT_TOP_RIGHT;
+	else if (x_position == RIGHT && z_position == TOP) {
+		_entity_position = TOP_RIGHT;
 	}
-	else if (x_height_case == HEIGHT_RIGHT && z_height_case == HEIGHT_BOTTOM) {
-		_entity_height_case = HEIGHT_BOTTOM_RIGHT;
+	else if (x_position == RIGHT && z_position == BOTTOM) {
+		_entity_position = BOTTOM_RIGHT;
 	}
 }
 
-float TileSelection::entity_tile_height(int height_case) {
-	std::cout << _index << '\n';
-	if (!_valid_index) {
+bool TerrainEntityPlacement::is_valid_ramp_placement(int position, const GLfloat* center, const GLfloat* horizontal, const GLfloat* vertical, const GLfloat* diagonal) {
+	if(!center || !horizontal || !vertical || !diagonal || position < TOP_LEFT) {
+		return false;
+	}
+	// indexs
+	int ci = 0, vi = 0, hi = 0, di = 0;
+
+	switch(position) {
+	case TOP_RIGHT :		ci = 1;		hi = 0;		vi = 3; 	di = 2;		break;
+	case TOP_LEFT :			ci = 0;		hi = 1;		vi = 2;		di = 3;		break;
+	case BOTTOM_RIGHT :		ci = 3;		hi = 2;		vi = 1;		di = 0;		break;
+	case BOTTOM_LEFT :		ci = 2;		hi = 3;		vi = 0;		di = 1;		break;
+	default:																break;
+	}
+	
+	const float h1 = center[ci], h2 = vertical[vi], h3 = horizontal[hi], h4 = diagonal[di];
+
+	return (h1 == h2 && h1 == h3 && h1 == h4 && h2 == h3 && h2 == h4 && h3 == h4);
+}
+
+float TerrainEntityPlacement::entity_tile_height(int index, int position, bool* valid_placement) {
+	if (valid_placement) {
+		*valid_placement = false;
+	}
+
+	if (!valid_index(index)) {
 		return 0.0f;
 	}
 
 	float height = 0.0f;
-	int index = _index;
-	int index2 = _index;
-	int index3 = _index;
-
-	switch (_entity_height_case) {
-	case HEIGHT_LEFT:
-		index -= 1;
-		break;
-	case HEIGHT_RIGHT:
-		index += 1;
-		break;
-	case HEIGHT_TOP:
-		index -= _width;
-		break;
-	case HEIGHT_BOTTOM:
-		index += _width;
-		break;
-	case HEIGHT_TOP_LEFT:
-		index -= 1;
-		index2 -= _width;
-		index3 -= _width - 1;
-		break;
-	case HEIGHT_BOTTOM_LEFT:
-		index -= 1;
-		index2 += _width;
-		index3 += _width - 1;
-		break;
-	case HEIGHT_TOP_RIGHT:
-		index += 1;
-		index2 -= _width;
-		index3 -= _width + 1;
-		break;
-	case HEIGHT_BOTTOM_RIGHT:
-		index += 1;
-		index2 += _width;
-		index3 += _width + 1;
-		break;
-	default:
-		break;
+	int i1 = index, i2 = index, i3 = index, i4 = index;
+	
+	switch (_entity_position) {
+	case LEFT:		  i2 -= 1;															break;
+	case RIGHT:		  i2 += 1;															break;
+	case TOP:		  i2 -= _width;														break;
+	case BOTTOM:	  i2 += _width;														break;
+	case TOP_LEFT:	  i2 -= 1;		i3 -= _width;		i4 -= _width + 1;				break;
+	case BOTTOM_LEFT: i2 -= 1;		i3 += _width;		i4 += _width - 1;				break;
+	case TOP_RIGHT:	  i2 += 1;		i3 -= _width;		i4 -= _width - 1;				break;
+	case BOTTOM_RIGHT:i2 += 1;		i3 += _width;		i4 += _width + 1;				break;
+	default:																			break;
 	}
 
-	if(height_case < HEIGHT_TOP_LEFT) {
-		if (valid_index(index)) {
-			height = max(_height_map[_index].min_height(), _height_map[index].min_height());
+	if (position == TOP || position == BOTTOM || position == LEFT || position == RIGHT) {
+		if (valid_index(i2)) {
+			const auto h1 = _height_map[i1].min_height();
+			const auto h2 = _height_map[i2].min_height();
+
+			height = max(h1, h2);
+
+			const auto t1 = _height_map[i1].height;
+			const auto t2 = _height_map[i2].height;
+
+			switch (position) {
+			case TOP:		_valid_entity_placement = (t1[0] == t1[1] && t1[0] == t2[2] && t1[1] == t2[3] && t2[2] == t2[3]);	break;
+			case BOTTOM:	_valid_entity_placement = (t1[2] == t1[3] && t1[2] == t2[0] && t1[3] == t2[1] && t2[0] == t2[1]);	break;
+			case LEFT:		_valid_entity_placement = (t1[0] == t1[2] && t1[0] == t2[1] && t1[2] == t2[3] && t2[1] == t2[3]);	break;
+			case RIGHT:		_valid_entity_placement = (t1[1] == t1[3] && t1[1] == t2[0] && t1[3] == t2[2] && t2[0] == t2[2]);	break;
+			default:																											break;
+			}
 		}
 	}
 	else {
-		if(valid_index(index)) {
-			height = max(_height_map[_index].min_height(), _height_map[index].min_height());
+		const auto h1 = _height_map[_index].min_height();
+		float h2 = 0.0f, h3 = 0.0f, h4 = 0.0f;
+
+		const bool f1 = _height_map[_index].is_flat();
+		bool f2 = true, f3 = true, f4 = true;
+
+		const GLfloat* t1 = _height_map[_index].height;
+		GLfloat* t2 = nullptr; GLfloat* t3 = nullptr; GLfloat* t4 = nullptr;
+
+		if (valid_index(i2)) {
+			t2 = _height_map[i2].height;
+			h2 = _height_map[i2].min_height();
+			f2 = _height_map[i2].is_flat();
+			height = max(h1, h2);
 		}
-		if(valid_index(index2)) {
-			height = max(height, _height_map[index2].min_height());
+		if (valid_index(i3)) {
+			t3 = _height_map[i3].height;
+			h3 = _height_map[i3].min_height();
+			f3 = _height_map[i3].is_flat();
+			height = max(height, h3);
 		}
-		if (valid_index(index3)) {
-			height = max(height, _height_map[index3].min_height());
+		if (valid_index(i4)) {
+			t4 = _height_map[i4].height;
+			h4 = _height_map[i4].min_height();
+			f4 = _height_map[i4].is_flat();
+			height = max(height, h4);
 		}
+		
+		if (valid_placement) {
+			// 4 tiles are flat and the same height
+			if ((f1 & f2 & f3 & f4) && h1 == h2 && h1 == h3 && h1 == h4 && h2 == h3 && h2 == h4 && h3 == h4) {
+				*valid_placement = true;
+			}
+			else {
+				*valid_placement = is_valid_ramp_placement(position, t1, t2, t3, t4);
+			}
+		}
+
 	}
 
 	return height;
 }
 
+bool TerrainEntityPlacement::is_valid_entity_placement() {
+	return _valid_entity_placement;
+}
+
+int TerrainEntityPlacement::entity_index(int x, int z, int position) {
+	const int center = z * (_width * 2) + _width + 1 + x * 2;
+
+	switch(position) {
+	case CENTER :				return center;
+	case TOP :					return center - _width;
+	case BOTTOM :				return center + _width;
+	case LEFT :					return center - 1;
+	case RIGHT :				return center + 1;
+	case TOP_LEFT: 				return center - _width - 1;
+	case TOP_RIGHT :			return center - _width + 1;
+	case BOTTOM_LEFT :			return center + _width - 1;
+	case BOTTOM_RIGHT :			return center + _width + 1;
+	}
+
+	assert(0);
+	return -1;
+}
+
+bool TerrainEntityPlacement::is_valid_entity_index(int index) {
+	return (index >= 0 && index < _width * _length * 2);
+}
+
 /********************************************************************************************************************************************************/
 
 TerrainEntities::TerrainEntities() {
-	_entities.resize(_width * _length * 2);
+	_entities.resize(_width * _length + ((_width - 1) * (_length - 1)));
 }
 
 void TerrainEntities::add_entity(std::shared_ptr<Entity> entity) {
-	_entities[_entity_tile_index] = entity;
+	_entities[_entity_index] = entity;
 
 	const auto transform = entity->get<TransformComponent>();
 	transform->_transform.set_position(entity_placement());
@@ -381,14 +452,18 @@ void TerrainEntities::adjust_entity_height() {
 		return;
 	}
 
-	const auto entity = _entities[_entity_tile_index];
-	if(!entity) {
-		return;
+	for (unsigned int i = 0; i < TOTAL_POSITIONS; ++i) {
+		const int index = entity_index(_x, _z, i); 
+		if (is_valid_entity_index(index)) {
+			const auto entity = _entities[index];
+			if (entity) {
+				const auto transform = entity->get<TransformComponent>();
+				const auto position = transform->_transform.get_position();
+				float height = entity_tile_height(_index, i);
+				transform->_transform.set_position(glm::vec3(position.x, height, position.z));
+			}
+		}
 	}
-
-	const auto transform = entity->get<TransformComponent>();
-	transform->_transform.set_position(entity_placement());
-
 }
 
 bool TerrainEntities::is_empty_tile() {
@@ -451,7 +526,7 @@ float TerrainEntities::entity_height(int x, int z) {
 }
 
 glm::vec3 TerrainEntities::entity_placement() {
-	return glm::vec3(_entity_x_index / _tile_length / 2.0f, entity_tile_height(_entity_height_case), _entity_z_index / _tile_length / 2.0f);
+	return glm::vec3(_entity_x_index / _tile_length / 2.0f, entity_tile_height(_index, _entity_position), _entity_z_index / _tile_length / 2.0f);
 }
 
 /********************************************************************************************************************************************************/
