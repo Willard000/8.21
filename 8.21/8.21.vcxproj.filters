@@ -117,6 +117,9 @@
     <ClCompile Include="src\System\GUIFunctions.cpp">
       <Filter>Source Files\System</Filter>
     </ClCompile>
+    <ClCompile Include="src\System\Renderer.cpp">
+      <Filter>Source Files\System</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\System\Environment.h">
@@ -190,6 +193,9 @@
     </ClInclude>
     <ClInclude Include="src\Utility\Collision.h">
       <Filter>Header Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="src\System\Renderer.h">
+      <Filter>Header Files\System</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

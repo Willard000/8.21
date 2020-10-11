@@ -7,6 +7,9 @@
 #include <vector>
 #include <memory>
 
+#include <fstream>
+#include "../src/Utility/FileReader.h"
+
 #include "Texture.h"
 #include "Transform.h"
 #include "../src/Entities/Entity.h"
@@ -46,6 +49,10 @@ class TerrainData {
 public:
 	TerrainData();
 	TerrainData(int width, int height, float tile_width, float tile_length);
+	TerrainData(TerrainData&& terrain_data) noexcept;
+
+	void save(std::ofstream& file);
+	void load(FileReader& file);
 protected:
 	int _width;
 	int _length;
@@ -64,9 +71,12 @@ enum {
 class TileSelection : virtual public TerrainData {
 public:
 	TileSelection();
+	~TileSelection();
 
 	void select(int x, int z);
 	bool select(glm::vec3 world_space, glm::vec3 position);
+
+	glm::vec3 get_select_position(glm::vec3 world_space, glm::vec3 offset);
 
 	void draw();
 	bool valid_index(int index);
@@ -108,6 +118,8 @@ private:
 
 class TerrainEntityPlacement : virtual public TileSelection, virtual public TerrainData {
 public:
+	TerrainEntityPlacement();
+
 	void select_entity_index();
 	void entity_position(int x_position, int z_position);
 	float entity_tile_height(int index, int position, bool* valid_placement = nullptr);
@@ -153,9 +165,10 @@ protected:
 class Terrain : virtual public TileSelection, public TerrainEntities, virtual public TerrainData {
 public:
 	Terrain(int width, int length, float tile_width, float tile_length);
+	Terrain(TerrainData&& terrain_data) noexcept;
 	~Terrain();
 
-	void draw(int mode);
+	void draw(int mode, bool draw_tile = true);
 	void adjust_tile_height(float height);
 	void adjust_ramp_height();
 	void adjust_front_ramp();

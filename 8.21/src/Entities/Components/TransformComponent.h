@@ -15,7 +15,7 @@ struct ReadTransformFile {
 
 	glm::vec3 _scale = glm::vec3(1, 1, 1);
 	glm::vec3 _rotation = glm::vec3(0, 0, 0);
-	float _speed = 0.1f;
+	float _speed = 0.001f;
 	bool _collidable = true;
 };
 
@@ -32,18 +32,23 @@ public:
 	static constexpr int _type = TRANSFORM_COMPONENT;
 
 	void move(glm::vec3 dir);
-	void set(const glm::vec3 pos);
-	void set_direction(const glm::vec3 dir);
+	void set(glm::vec3 pos);
+	void set_direction(glm::vec3 dir);
+	void set_destination(glm::vec3 dest);
+
+	CollisionBox get_collision_box();
 
 	Transform _transform;
 
 	glm::vec3 _direction;
+	glm::vec3 _destination;
 	float _y_rot;
 	int _turn;
 
 	float _speed;
 
 	bool _collidable;
+	bool _dest_reached;
 
 	CollisionBox _collision_box;
 

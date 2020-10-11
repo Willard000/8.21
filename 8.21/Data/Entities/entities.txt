@@ -4,3 +4,6 @@
 0 Data\Entities\Objects\tree.txt
 1 Data\Entities\Objects\clay rock.txt
 2 Data\Entities\Objects\box.txt
+
+# Unit
+0 Data\Entities\Units\sphere.txt

@@ -7,3 +7,4 @@
 5 Data\Shaders\Texture Shader\texture shader.txt
 6 Data\Shaders\View Shader\view shader.txt
 7 Data\Shaders\Color Shader\color shader.txt
+8 Data\Shaders\Color Shader\color shader2.txt

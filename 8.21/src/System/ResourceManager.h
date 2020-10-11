@@ -91,8 +91,12 @@ public:
 
 	void load_default_entities();
 
+	void update();
+
 	std::shared_ptr<Entity> new_entity(std::string_view type, int id);
 	std::shared_ptr<Entity> get_default_entity(std::string_view type, unsigned int id);
+
+	std::vector<std::shared_ptr<Entity>>* get_entities();
 protected:
 	std::vector<std::shared_ptr<Entity>> _entities;
 
@@ -109,7 +113,10 @@ public:
 	~ResourceManager();
 
 	void load_resources();
+	void update();
 	void draw();
+
+	void save_map();
 private:
 };
 

@@ -6,6 +6,7 @@
 #include "../src/System/ResourceManager.h"
 #include "../src/System/InputManager.h"
 #include "../src/System/GUIManager.h"
+#include "../src/System/Renderer.h"
 
 #include <cassert>
 
@@ -18,7 +19,8 @@ Environment::Environment() :
 	_window				( nullptr ),
 	_resource_manager	( nullptr ),
 	_input_manager		( nullptr ),
-	_gui_manager		( nullptr )
+	_gui_manager		( nullptr ),
+	_renderer			( nullptr )
 {
 	assert(!_instance);
 	_instance = this;
@@ -62,6 +64,14 @@ void Environment::set_gui_manager(GUIManager* gui_manager) {
 	_gui_manager = gui_manager;
 }
 
+void Environment::set_renderer(Renderer* renderer) {
+	_renderer = renderer;
+}
+
+int Environment::get_mode() {
+	return _mode;
+}
+
 Clock* Environment::get_clock() {
 	return _clock;
 }
@@ -84,6 +94,10 @@ InputManager* Environment::get_input_manager() {
 
 GUIManager* Environment::get_gui_manager() {
 	return _gui_manager;
+}
+
+Renderer* Environment::get_renderer() {
+	return _renderer;
 }
 
 void Environment::shut_down() {
@@ -115,5 +129,10 @@ void Environment::shut_down() {
 	if (_gui_manager) {
 		delete _gui_manager;
 		_gui_manager = nullptr;
+	}
+
+	if(_renderer) {
+		delete _renderer;
+		_renderer = nullptr;
 	}
 }

@@ -13,6 +13,7 @@
 
 #include "../src/Resources/Icon.h"
 
+#include <fstream>
 #include <iostream>
 
 #define SHADER_FILE "Data\\Shaders\\shaders.txt"
@@ -139,7 +140,12 @@ MapManager::~MapManager()
 {}
 
 void MapManager::load_map() {
-	_terrain = std::make_shared<Terrain>(100, 100, 1.0f, 1.0f);
+	//_terrain = std::make_shared<Terrain>(100, 100, 1.0f, 1.0f);
+
+	FileReader file("Data\\map.txt");
+	TerrainData terrain_data;
+	terrain_data.load(file);
+	_terrain = std::make_shared<Terrain>(std::move(terrain_data));
 }
 
 std::shared_ptr<Terrain> MapManager::get_terrain() {
@@ -223,6 +229,12 @@ void EntityManager::load_default_entities() {
 
 }
 
+void EntityManager::update() {
+	for(const auto& e : _entities) {
+		e->update();
+	}
+}
+
 std::shared_ptr<Entity> EntityManager::new_entity(std::string_view type, int id) {
 	const auto default_entity = _default_entities.at(type.data()).at(id);
 	const auto new_entity = std::make_shared<Entity>(*default_entity);
@@ -235,6 +247,10 @@ std::shared_ptr<Entity> EntityManager::new_entity(std::string_view type, int id)
 
 std::shared_ptr<Entity> EntityManager::get_default_entity(std::string_view type, unsigned int id) {
 	return _default_entities.at(type.data()).at(id);
+}
+
+std::vector<std::shared_ptr<Entity>>* EntityManager::get_entities() {
+	return &_entities;
 }
 
 /********************************************************************************************************************************************************/
@@ -253,11 +269,33 @@ void ResourceManager::load_resources() {
 	load_map();
 }
 
+void ResourceManager::update() {
+	EntityManager::update();
+}
+
 void ResourceManager::draw() {
-	_terrain->draw(GL_TRIANGLES);
+	const auto mode = Environment::get().get_mode();
+	_terrain->draw(GL_TRIANGLES, mode == MODE_EDITOR);
 
 	for(const auto entity : _entities) {
 		_models.at(entity->get_model_id())->draw(entity->get<TransformComponent>()->_transform);
 	}
 }
+
+void ResourceManager::save_map() {
+	std::ofstream file;
+	file.open("Data\\map.txt", std::ios::out);
+
+	if(!file.is_open()) {
+		std::cout << "Save map()" << '\n';
+		std::cout << "Couldn't open file Data\\map.txt" << '\n';
+		return;
+	}
+
+	file.clear();
+	_terrain->save(file);
+
+	file.close();
+}
+
 /********************************************************************************************************************************************************/

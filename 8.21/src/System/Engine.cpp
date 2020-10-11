@@ -5,6 +5,7 @@
 #include "../src/System/ResourceManager.h"
 #include "../src/System/InputManager.h"
 #include "../src/System/GUIManager.h"
+#include "../src/System/Renderer.h"
 
 #include <cassert>
 
@@ -15,6 +16,8 @@ Engine::Engine() :
 		//...
 		assert(NULL);
 	}
+
+	_environment.set_mode(MODE_ENGINE);
 
 	Clock* clock = new Clock;
 	_environment.set_clock(clock);
@@ -31,6 +34,9 @@ Engine::Engine() :
 
 	GUIManager* gui_manager = new GUIManager;
 	_environment.set_gui_manager(gui_manager);
+
+	Renderer* renderer = new Renderer;
+	_environment.set_renderer(renderer);
 }
 
 Engine::~Engine() {
@@ -40,6 +46,8 @@ Engine::~Engine() {
 
 void Engine::run() {
 
+	_environment.get().get_resource_manager()->new_entity("Unit", 0);
+
 	while (!_exit) {
 		_environment.get_clock()->update();
 		_environment.get_window()->update();
@@ -47,6 +55,7 @@ void Engine::run() {
 		render();
 
 		_environment.get_input_manager()->update(&_exit);
+		_environment.get_resource_manager()->update();
 	}
 	
 }
@@ -56,6 +65,8 @@ void Engine::render() {
 	glClearBufferfv(GL_COLOR, 0, WINDOW_BACKGROUND_COLOR);
 
 	_environment.get_resource_manager()->draw();
+
+	_environment.get_renderer()->debug_draw();
 
 	glfwSwapBuffers(_environment.get_window()->get_glfw_window());
 }

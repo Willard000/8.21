@@ -9,9 +9,8 @@
 #include "../src/Entities/Components/Component.h"
 #include "../src/Entities/Components/TransformComponent.h"
 
-constexpr const char* ENTITY_PLAYER = "Player";
 constexpr const char* ENTITY_OBJECT = "Object";
-constexpr const char* ENTITY_ENEMY = "Enemy";
+constexpr const char* ENTITY_UNIT = "Unit";
 
 struct ReadEntityFile {
 	ReadEntityFile(const char* file_path);

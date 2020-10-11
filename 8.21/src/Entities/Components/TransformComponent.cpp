@@ -36,6 +36,8 @@ TransformComponent::TransformComponent(std::shared_ptr<Entity> entity, glm::vec3
 	_speed					( speed ),
 	_collidable				( collidable ),
 	_direction				( glm::vec3(0, 0, 0) ),
+	_destination			( glm::vec3(0, 0, 0) ),
+	_dest_reached			( true ),
 	_y_rot					( 0 ),
 	_turn					( 0 )
 {
@@ -50,6 +52,8 @@ TransformComponent::TransformComponent(std::shared_ptr<Entity> new_entity, const
 	_speed					( rhs._speed ),
 	_collidable				( rhs._collidable),
 	_direction				( rhs._direction ),
+	_destination			( rhs._destination ),
+	_dest_reached			( rhs._dest_reached ),
 	_y_rot					( rhs._y_rot ),
 	_turn					( rhs._turn ),
 	_collision_box			( rhs._collision_box )
@@ -60,6 +64,10 @@ std::shared_ptr<Component> TransformComponent::copy(std::shared_ptr<Entity> new_
 }
 
 void TransformComponent::update() {
+	if(!_dest_reached) {
+		move(_destination - _transform.get_position());
+	}
+	/*
 	auto rotation = _transform.get_rotation();
 	if (_y_rot != rotation.y) {
 		if (_turn == TURN_CLOCKWISE) {
@@ -82,6 +90,7 @@ void TransformComponent::update() {
 		}
 		_transform.set_rotation(rotation);
 	}
+	*/
 }
 
 const int TransformComponent::get_type() const {
@@ -112,11 +121,11 @@ void TransformComponent::move(glm::vec3 dir) {
 	*/
 }
 
-void TransformComponent::set(const glm::vec3 pos) {
+void TransformComponent::set(glm::vec3 pos) {
 	_transform.set_position(pos);
 }
 
-void TransformComponent::set_direction(const glm::vec3 dir) {
+void TransformComponent::set_direction(glm::vec3 dir) {
 	float old_y_rot = _y_rot;
 	_direction = dir;
 
@@ -140,4 +149,15 @@ void TransformComponent::set_direction(const glm::vec3 dir) {
 	else {
 		_turn = TURN_CLOCKWISE;
 	}
+}
+
+void TransformComponent::set_destination(glm::vec3 dest) {
+	_destination = dest;
+	_dest_reached = false;
+}
+
+CollisionBox TransformComponent::get_collision_box() {
+	return { _collision_box.max * _transform.get_scale() + _transform.get_position(),
+		     _collision_box.min * _transform.get_scale() + _transform.get_position()
+	};
 }

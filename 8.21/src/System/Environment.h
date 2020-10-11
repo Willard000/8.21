@@ -1,12 +1,16 @@
 #ifndef ENVIRONMENT_H
 #define ENVIRONMENT_H
 
+#define MODE_EDITOR 0
+#define MODE_ENGINE 1
+
 class Clock;
 class Log;
 class Window;
 class ResourceManager;
 class InputManager;
 class GUIManager;
+class Renderer;
 
 class Environment {
 public:
@@ -20,6 +24,7 @@ public:
 	void set_resource_manager(ResourceManager* resource_manager);
 	void set_input_manager(InputManager* input_manager);
 	void set_gui_manager(GUIManager* gui_manager);
+	void set_renderer(Renderer* renderer);
 
 	int     get_mode();
 	Clock*  get_clock();
@@ -28,6 +33,7 @@ public:
 	ResourceManager* get_resource_manager();
 	InputManager* get_input_manager();
 	GUIManager* get_gui_manager();
+	Renderer* get_renderer();
 
 	void shut_down();
 
@@ -40,6 +46,7 @@ private:
 	ResourceManager* _resource_manager;
 	InputManager* _input_manager;
 	GUIManager* _gui_manager;
+	Renderer* _renderer;
 
 	static Environment* _instance;
 };

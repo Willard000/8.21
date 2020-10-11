@@ -1,0 +1,4 @@
+# Model
+DIR Data\Models\Sphere\
+file Sphere.obj
+program 5

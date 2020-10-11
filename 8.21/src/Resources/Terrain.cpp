@@ -7,6 +7,7 @@
 #include "../src/Resources/Program.h"
 
 #include <iostream>
+#include <sstream>
 
 #define TERRAIN_SHADER_ID 1
 #define TILE_SELECITON_SHADER_ID 7
@@ -14,20 +15,60 @@
 /********************************************************************************************************************************************************/
 
 TerrainData::TerrainData(int width, int length, float tile_width, float tile_length) :
-	_width(width),
-	_length(length),
-	_tile_width(tile_width),
-	_tile_length(tile_length)
+	_width				( width ),
+	_length				( length ),
+	_tile_width			( tile_width ),
+	_tile_length		( tile_length )
 {
 	_height_map.resize(width * length);
 }
 
-TerrainData::TerrainData() :
-	_width(0),
-	_length(0),
-	_tile_width(0),
-	_tile_length(0)
+TerrainData::TerrainData(TerrainData&& terrain_data) noexcept :
+	_width				( std::move(terrain_data._width) ),
+	_length				( std::move(terrain_data._length) ),
+	_tile_width			( std::move(terrain_data._tile_width) ),
+	_tile_length		( std::move(terrain_data._tile_length) ),
+	_height_map			( std::move(terrain_data._height_map) )
 {}
+
+TerrainData::TerrainData() :
+	_width				( 0 ),
+	_length				( 0 ),
+	_tile_width			( 0 ),
+	_tile_length		( 0 )
+{}
+
+void TerrainData::save(std::ofstream& file) {
+	file << "# Terrain" << '\n';
+	file << "width " << _width << '\n'
+		 << "length " << _length << '\n'
+		 << "tile_width " << _tile_width << '\n'
+		 << "tile_length " << _tile_length << '\n';
+
+	file << "height_map ";
+	for(const auto tile : _height_map) {
+		file << tile.height[0] << ' ' << tile.height[1] << ' ' << tile.height[2] << ' ' << tile.height[3] << ' ';
+	}
+	file << '\n';
+}
+
+void TerrainData::load(FileReader& file) {
+	file.set_section("Terrain");
+	file.read(&_width, "width");
+	file.read(&_length, "length");
+	file.read(&_tile_width, "tile_width");
+	file.read(&_tile_length, "tile_length");
+
+	_height_map.resize(_width * _length);
+
+	std::string height_map;
+	file.read(&height_map, "height_map");
+	std::stringstream ss_height_map(height_map);
+
+	for(int i = 0; i < _height_map.size(); ++i) {
+		ss_height_map >> _height_map[i].height[0] >> _height_map[i].height[1] >> _height_map[i].height[2] >> _height_map[i].height[3];
+	}
+}
 
 /********************************************************************************************************************************************************/
 
@@ -47,6 +88,11 @@ TileSelection::TileSelection() :
 	_vertex_data.push_back(glm::vec3(_tile_width, 0.01f, _tile_length));
 
 	create_vao();
+}
+
+TileSelection::~TileSelection() {
+	glDeleteVertexArrays(1, &_vao);
+	glDeleteBuffers(1, &_vertex_buffer);
 }
 
 void TileSelection::create_vao() {
@@ -134,7 +180,6 @@ bool TileSelection::is_valid_tile() {
 }
 
 bool TileSelection::select(glm::vec3 world_space, glm::vec3 position) {
-
 	float height = position.y;
 	const float increment = height > 1.0f ? height * 0.01f : 0.01f;
 
@@ -152,6 +197,21 @@ bool TileSelection::select(glm::vec3 world_space, glm::vec3 position) {
 	select((int)x, (int)z);
 
 	return false;
+}
+
+glm::vec3 TileSelection::get_select_position(glm::vec3 world_space, glm::vec3 offset) {
+	float height = offset.y;
+	const float increment = height > 1.0f ? height * 0.01f : 0.01f;
+
+	while (above_terrain(world_space, offset, height)) {
+		height -= increment;
+	}
+
+	const float y = abs((offset.y - height) / world_space.y);
+	const float x = (y * world_space.x + offset.x) / _tile_width;
+	const float z = (y * world_space.z + offset.z) / _tile_length;
+
+	return glm::vec3(x, y, z);
 }
 
 bool TileSelection::above_terrain(glm::vec3 world_space, glm::vec3 position, float height) {
@@ -217,6 +277,14 @@ glm::vec2 TileSelection::get_selected_tile() {
 
 
 /********************************************************************************************************************************************************/
+
+TerrainEntityPlacement::TerrainEntityPlacement() :
+	_entity_index			( -1 ),
+	_entity_position		( -1 ),
+	_entity_x_index			( -1 ),
+	_entity_z_index			( -1 ),
+	_valid_entity_index	    ( false )
+{}
 
 void TerrainEntityPlacement::select_entity_index() {
 	int x_index = 0;
@@ -423,6 +491,7 @@ TerrainEntities::TerrainEntities() {
 }
 
 void TerrainEntities::add_entity(std::shared_ptr<Entity> entity) {
+	std::cout << _entity_index << '\n';
 	_entities[_entity_index] = entity;
 
 	const auto transform = entity->get<TransformComponent>();
@@ -533,6 +602,18 @@ glm::vec3 TerrainEntities::entity_placement() {
 
 Terrain::Terrain(int width, int length, float tile_width, float tile_length) :
 	TerrainData			( width, length, tile_width, tile_length )
+{
+	generate_vertex_data();
+	generate_uv_data();
+	generate_position_data();
+
+	load_textures();
+
+	create_vao();
+}
+
+Terrain::Terrain(TerrainData&& terrain_data) noexcept :
+	TerrainData		( std::move(terrain_data) )
 {
 	generate_vertex_data();
 	generate_uv_data();
@@ -821,7 +902,7 @@ void Terrain::create_vao() {
 	glBindTexture(GL_TEXTURE_2D, _tile_texture._id);
 }
 
-void Terrain::draw(int mode) {
+void Terrain::draw(int mode, bool draw_tile) {
 	glBindVertexArray(_vao);
 	glUseProgram(_program);
 
@@ -837,7 +918,9 @@ void Terrain::draw(int mode) {
 
 	glDrawArraysInstanced(mode, 0, 6 * 5, _position_data.size());
 
-	TileSelection::draw();
+	if (draw_tile) {
+		TileSelection::draw();
+	}
 
 	glDisable(GL_CULL_FACE);
 }

@@ -7,15 +7,12 @@
 
 #include "../src/Resources/Mesh.h"
 
+#include "../src/Utility/Collision.h"
+
 struct Program;
 class Transform;
 
 typedef unsigned int GLuint;
-
-struct CollisionBox {
-	glm::vec3 min;
-	glm::vec3 max;
-};
 
 struct ReadModelFile {
 public:

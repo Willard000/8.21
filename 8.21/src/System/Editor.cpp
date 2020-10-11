@@ -5,6 +5,7 @@
 #include "../src/System/ResourceManager.h"
 #include "../src/System/InputManager.h"
 #include "../src/System/GUIManager.h"
+#include "../src/System/Renderer.h"
 
 #include <cassert>
 
@@ -15,6 +16,8 @@ Editor::Editor() :
 		//...
 		assert(NULL);
 	}
+
+	_environment.set_mode(MODE_EDITOR);
 
 	Clock* clock = new Clock;
 	_environment.set_clock(clock);
@@ -31,6 +34,9 @@ Editor::Editor() :
 
 	GUIManager* gui_manager = new EditorGUIManager;
 	_environment.set_gui_manager(gui_manager);
+
+	Renderer* renderer = new Renderer;
+	_environment.set_renderer(renderer);
 }
 
 Editor::~Editor() {

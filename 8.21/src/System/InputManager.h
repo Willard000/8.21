@@ -3,9 +3,26 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <vector>
+#include <memory>
+
 #define EDITOR_EDIT_TERRAIN 0
 #define EDITOR_PLACE_ENTITY 1
 #define EDITOR_SELECT_ENTITY 2
+
+/********************************************************************************************************************************************************/
+
+class Entity;
+
+class EntitySelection {
+public:
+	EntitySelection();
+
+	void select_all(glm::vec2 first, glm::vec2 last);
+	void move_all(double xpos, double ypos);
+protected:
+	std::vector<std::shared_ptr<Entity>> _entities;
+};
 
 /********************************************************************************************************************************************************/
 
@@ -22,6 +39,7 @@ public:
 	double get_mouse_y();
 
 	glm::vec3 get_mouse_world_space_vector();
+	glm::vec3 mouse_world_space_vector(glm::vec2 pos);
 
 	int get_mode();
 	void set_mode(int mode);
@@ -29,12 +47,15 @@ protected:
 	double _xpos;
 	double _ypos;
 
+	glm::vec2 _first;
+	glm::vec2 _last;
+
 	int _mode;
 };
 
 /********************************************************************************************************************************************************/
 
-class GameInputManager : public InputManager {
+class GameInputManager : public InputManager, public EntitySelection {
 public:
 	GameInputManager();
 	~GameInputManager();

@@ -167,6 +167,7 @@
     <ClCompile Include="src\System\GUIManager.cpp" />
     <ClCompile Include="src\System\InputManager.cpp" />
     <ClCompile Include="src\System\Main.cpp" />
+    <ClCompile Include="src\System\Renderer.cpp" />
     <ClCompile Include="src\System\ResourceManager.cpp" />
     <ClCompile Include="src\Utility\Clock.cpp" />
     <ClCompile Include="src\Utility\FileReader.cpp" />
@@ -192,6 +193,7 @@
     <ClInclude Include="src\System\GUIFunctions.h" />
     <ClInclude Include="src\System\GUIManager.h" />
     <ClInclude Include="src\System\InputManager.h" />
+    <ClInclude Include="src\System\Renderer.h" />
     <ClInclude Include="src\System\ResourceManager.h" />
     <ClInclude Include="src\Utility\Clock.h" />
     <ClInclude Include="src\Utility\Collision.h" />
