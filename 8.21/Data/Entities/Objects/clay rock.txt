@@ -1,7 +1,9 @@
 - Tree
 
 # Entity
+type Object
+id 1
 model_id 1
-str_name Clay Rock
+name Clay Rock
 
 # Transform

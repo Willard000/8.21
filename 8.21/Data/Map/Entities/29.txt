@@ -1,0 +1,14 @@
+# Entity
+type Object
+id 0
+model_id 0
+name Tree
+draw 1
+
+# Transform
+position 9.5 1 16.5
+scale 1 1 1
+rotation 0 0 0
+speed 1
+collidable 1
+

@@ -5,6 +5,7 @@
 #include "../src/System/Environment.h"
 #include "../src/Utility/Clock.h"
 #include "../src/System/ResourceManager.h"
+#include "../src/Resources/Terrain.h"
 
 #include "../src/Utility/FileReader.h"
 
@@ -12,9 +13,15 @@
 
 constexpr float ROTATION_SPEED = 100000.0f;
 
-ReadTransformFile::ReadTransformFile(FileReader& file) {
-	if (file.set_section("Transform")) {
+ReadTransformFile::ReadTransformFile(FileReader& file, std::string_view section) {
+	if (file.set_section(section)) {
 		std::string data;
+
+		if(file.read(&data, "position")) {
+			std::stringstream ss_position(data);
+			ss_position >> _position.x >> _position.y >> _position.z;
+		}
+
 		if(file.read(&data, "scale")) {
 			std::stringstream ss_scale(data);
 			ss_scale >> _scale.x >> _scale.y >> _scale.z;
@@ -30,9 +37,9 @@ ReadTransformFile::ReadTransformFile(FileReader& file) {
 	}
 }
 
-TransformComponent::TransformComponent(std::shared_ptr<Entity> entity, glm::vec3 scale, glm::vec3 rotation, float speed, bool collidable) :
+TransformComponent::TransformComponent(std::shared_ptr<Entity> entity, glm::vec3 position, glm::vec3 scale, glm::vec3 rotation, float speed, bool collidable) :
 	Component				( entity ),
-	_transform				( glm::vec3(0.0, 0.0, 0.0), scale, rotation ),
+	_transform				( position, scale, rotation ),
 	_speed					( speed ),
 	_collidable				( collidable ),
 	_direction				( glm::vec3(0, 0, 0) ),
@@ -97,18 +104,31 @@ const int TransformComponent::get_type() const {
 	return _type;
 }
 
+void TransformComponent::save(std::ofstream& file) {
+	const auto position = _transform.get_position();
+	const auto scale = _transform.get_scale();
+	const auto rotation = _transform.get_rotation();
+
+	file << "# Transform" << '\n';
+
+	file << "position " << position.x << " " << position.y << " " << position.z << '\n';
+	file << "scale " << scale.x << " " << scale.y << " " << scale.z << '\n';
+	file << "rotation " << rotation.x << " " << rotation.y << " " << rotation.z << '\n';
+	file << "speed " << _speed << '\n';
+	file << "collidable " << _collidable << '\n';
+	file << '\n';
+}
+
 void TransformComponent::move(glm::vec3 dir) {
 	dir = glm::normalize(dir);
-
 	glm::vec3 old_position = _transform.get_position();
 
-	_transform.set_position(
-		glm::vec3(
-		_transform.get_position().x + dir.x * _speed,
-		_transform.get_position().y + dir.y * _speed,
-		_transform.get_position().z + dir.z * _speed
-		)
-	);
+	const auto terrain = Environment::get().get_resource_manager()->get_terrain();
+	const float x = _transform.get_position().x + dir.x * _speed;
+	const float z = _transform.get_position().z + dir.z * _speed;
+	const float y = terrain->exact_height(x, z);
+
+	_transform.set_position(glm::vec3(x, y, z));
 
 	/*
 	if(_entity->is_collision()) {

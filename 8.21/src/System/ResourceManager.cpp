@@ -15,6 +15,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <filesystem>
 
 #define SHADER_FILE "Data\\Shaders\\shaders.txt"
 #define MODEL_FILE "Data\\Models\\models.txt"
@@ -142,7 +143,7 @@ MapManager::~MapManager()
 void MapManager::load_map() {
 	//_terrain = std::make_shared<Terrain>(100, 100, 1.0f, 1.0f);
 
-	FileReader file("Data\\map.txt");
+	FileReader file("Data\\Map\\map.txt");
 	TerrainData terrain_data;
 	terrain_data.load(file);
 	_terrain = std::make_shared<Terrain>(std::move(terrain_data));
@@ -230,8 +231,34 @@ void EntityManager::load_default_entities() {
 }
 
 void EntityManager::update() {
+	auto it = _entities.begin();
+	while (it != _entities.end()) {
+		if ((*it)->get_destroy()) {
+			it = _entities.erase(it);
+			continue;
+		}
+
+		(*it)->update();
+		++it;
+	}
+}
+
+void EntityManager::save_entities(std::string_view folder) {
+	std::filesystem::remove_all(folder);
+	std::filesystem::create_directory(folder);
+
 	for(const auto& e : _entities) {
-		e->update();
+		std::ofstream file;
+		file.open(folder.data() + std::to_string(e->get_unique_id()) + ".txt", std::ios::in | std::ios::trunc);
+		e->save(file);
+	}
+}
+
+void EntityManager::load_entities() {
+	for(auto& p : std::filesystem::directory_iterator("Data\\Map\\Entities")) {
+		auto entity = std::make_shared<Entity>();
+		entity->load(p.path().string());
+		_entities.push_back(entity);
 	}
 }
 
@@ -243,6 +270,15 @@ std::shared_ptr<Entity> EntityManager::new_entity(std::string_view type, int id)
 	_entities.push_back(new_entity);
 
 	return new_entity;
+}
+
+void EntityManager::remove_entity(std::shared_ptr<Entity> entity) {
+	for(auto it = _entities.begin(); it != _entities.end(); ++it) {
+		if((*it) == entity) {
+			_entities.erase(it);
+			return;
+		}
+	}
 }
 
 std::shared_ptr<Entity> EntityManager::get_default_entity(std::string_view type, unsigned int id) {
@@ -267,6 +303,7 @@ void ResourceManager::load_resources() {
 	load_models();
 	load_default_entities();
 	load_map();
+	load_entities();
 }
 
 void ResourceManager::update() {
@@ -282,18 +319,19 @@ void ResourceManager::draw() {
 	}
 }
 
-void ResourceManager::save_map() {
+void ResourceManager::save() {
 	std::ofstream file;
-	file.open("Data\\map.txt", std::ios::out);
+	file.open("Data\\Map\\map.txt", std::ios::out | std::ios::trunc);
 
-	if(!file.is_open()) {
-		std::cout << "Save map()" << '\n';
-		std::cout << "Couldn't open file Data\\map.txt" << '\n';
+	if (!file.is_open()) {
+		std::cout << "save()" << '\n';
+		std::cout << "Couldn't open file Data\\Map\\map.txt" << '\n';
 		return;
 	}
 
-	file.clear();
 	_terrain->save(file);
+
+	save_entities("Data\\Map\\Entities\\");
 
 	file.close();
 }

@@ -5,6 +5,7 @@
 #include <string_view>
 #include <array>
 #include <memory>
+#include <fstream>
 
 #include "../src/Entities/Components/Component.h"
 #include "../src/Entities/Components/TransformComponent.h"
@@ -13,8 +14,10 @@ constexpr const char* ENTITY_OBJECT = "Object";
 constexpr const char* ENTITY_UNIT = "Unit";
 
 struct ReadEntityFile {
-	ReadEntityFile(const char* file_path);
+	ReadEntityFile(const char* file_path, std::string_view section = "Entity");
 
+	std::string _type = "unknown";
+	int _id = -1;
 	int _model_id = 0;
 	bool _draw = true;
 	std::string _name = "unknown";
@@ -24,9 +27,9 @@ struct ReadEntityFile {
 
 class EntityLoader {
 public:
-	EntityLoader(std::shared_ptr<Entity> entity);
+	EntityLoader(std::shared_ptr<Entity> entity, const char* file);
 
-	std::string find_file_path();
+	static std::string default_file(std::string_view type, int id);
 
 	void load_transform();
 private:
@@ -56,7 +59,9 @@ public:
 
 	void destroy();
 
-	void load();
+	void load(std::string_view file = "Default");
+
+	void save(std::ofstream& file);
 
 	unsigned int get_unique_id();
 	int get_id();

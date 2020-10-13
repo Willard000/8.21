@@ -73,7 +73,6 @@ public:
 	ModelManager();
 	~ModelManager();
 
-
 	std::shared_ptr<Model> get_model(int key);
 protected:
 	void load_models();
@@ -93,8 +92,13 @@ public:
 
 	void update();
 
+	void save_entities(std::string_view folder);
+	void load_entities();
+
 	std::shared_ptr<Entity> new_entity(std::string_view type, int id);
 	std::shared_ptr<Entity> get_default_entity(std::string_view type, unsigned int id);
+
+	void remove_entity(std::shared_ptr<Entity> entity);
 
 	std::vector<std::shared_ptr<Entity>>* get_entities();
 protected:
@@ -116,7 +120,7 @@ public:
 	void update();
 	void draw();
 
-	void save_map();
+	void save();
 private:
 };
 

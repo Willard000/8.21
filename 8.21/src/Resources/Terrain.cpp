@@ -499,21 +499,21 @@ void TerrainEntities::add_entity(std::shared_ptr<Entity> entity) {
 }
 
 std::shared_ptr<Entity> TerrainEntities::remove_entity() {
-	if(!_valid_index) {
+	if(!_valid_entity_index) {
 		return nullptr;
 	}
 
-	const auto entity = _entities[_index];
-	_entities[_index] = nullptr;
+	const auto entity = _entities[_entity_index];
+	_entities[_entity_index] = nullptr;
 	return entity;
 }
 
 std::shared_ptr<Entity> TerrainEntities::get_entity() {
-	if(!_valid_index) {
+	if(!_valid_entity_index) {
 		return nullptr;
 	}
 
-	return _entities[_index];
+	return _entities[_entity_index];
 }
 
 void TerrainEntities::adjust_entity_height() {
@@ -543,6 +543,7 @@ bool TerrainEntities::is_empty_tile() {
 	return _entities[_index] == nullptr ? true : false;
 }
 
+// broke needs to use _entity_index
 std::shared_ptr<Entity> TerrainEntities::select_entity(glm::vec3 world_space, glm::vec3 position) {
 	float height = position.y;
 	const float increment = height > 1.0f ? height * 0.01f : 0.01f;
@@ -561,9 +562,12 @@ std::shared_ptr<Entity> TerrainEntities::select_entity(glm::vec3 world_space, gl
 
 	const int index = (int)z * _width + (int)x;
 
+	std::cout << index << '\n';
+
 	return _entities[index];
 }
 
+// broke needs to use _entity_index
 bool TerrainEntities::above_entity(glm::vec3 world_space, glm::vec3 position, float height) {
 	const float y = abs((position.y - height) / world_space.y);
 	const float x = (y * world_space.x + position.x) / _tile_width;
@@ -578,6 +582,7 @@ bool TerrainEntities::above_entity(glm::vec3 world_space, glm::vec3 position, fl
 	return false;
 }
 
+// broke needs to use _entity_index
 float TerrainEntities::entity_height(int x, int z) {
 	if (x < 0 || x >= _width || z < 0 || z >= _length) {
 		return 0.0f;

@@ -22,16 +22,31 @@
 constexpr float SCROLL_SPEED = 50000.0f;
 
 #include <iostream>
-void select_entity() {
+std::shared_ptr<Entity> select_entity(float xpos, float ypos) {
 	const auto terrain = Environment::get().get_resource_manager()->get_terrain();
-	const auto world_space = Environment::get().get_input_manager()->get_mouse_world_space_vector();
+	const auto world_space = Environment::get().get_input_manager()->mouse_world_space_vector(glm::vec2(xpos, ypos));
 	const auto camera = Environment::get().get_window()->get_camera();
 
-	const auto entity = terrain->select_entity(world_space, camera->get_position());
+	const auto pos = terrain->get_select_position(world_space, camera->get_position());
+	CollisionBox rect;
+	rect.min = glm::vec3(pos.x - 1, pos.y - 1, pos.z - 1);
+	rect.max = glm::vec3(pos.x + 1, pos.y + 1, pos.z + 1);
 
-	if (entity) {
-		std::cout << entity->get_name() << '\n';
+	const auto entities = Environment::get().get_resource_manager()->get_entities();
+
+	std::cout << "select_entity" << '\n';
+	std::cout << pos.x << " " << pos.y << " " << pos.z << '\n';
+	for(const auto& e : *entities) {
+		if(const auto& transform = e->get<TransformComponent>()) {
+			if(xz_collision(rect, transform->get_collision_box())) {
+				std::cout << e->get_name() << '\n';
+				return e;
+			}
+		}
 	}
+	std::cout << "none" << '\n';
+
+	return nullptr;
 }
 
 void select_tile() {
@@ -59,6 +74,23 @@ void place_entity() {
 	if (terrain->is_valid_tile() && terrain->is_empty_tile() && terrain->is_valid_entity_placement()) {
 		const auto entity = resource_manager->new_entity(selection->_type, selection->_id);
 		terrain->add_entity(entity);
+	}
+}
+
+/********************************************************************************************************************************************************/
+
+KeyPressOnce::KeyPressOnce(int glfw_key) :
+	_key(glfw_key),
+	_released(true)
+{}
+
+bool KeyPressOnce::pressed(int key, int action) {
+	if (key == _key && action == GLFW_PRESS && _released) {
+		return true;
+	}
+	else if (key == _key && action == GLFW_RELEASE && !_released) {
+		_released = false;
+		return false;
 	}
 }
 
@@ -324,10 +356,6 @@ void EditorInputManager::update(bool* exit) {
 		camera->move(CAMERA_UP);
 	}
 
-	if(glfwGetKey(window, GLFW_KEY_Z)) {
-		Environment::get().get_resource_manager()->save_map();
-	}
-
 	select_tile();
 }
 
@@ -337,9 +365,21 @@ void EditorInputManager::key_callback(GLFWwindow* window, int key, int scancode,
 	}
 
 	const auto camera = Environment::get().get_window()->get_camera();
+	const auto input_manager = Environment::get().get_input_manager();
 
 	if (key == GLFW_KEY_1 && action == GLFW_PRESS) {
 		camera->mode(CAMERA_TOGGLE);
+	}
+
+	if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+		const auto entity = select_entity(input_manager->get_mouse_x(), input_manager->get_mouse_y());
+		if(entity) {
+			Environment::get().get_resource_manager()->remove_entity(entity);
+		}
+	}
+
+	if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
+		Environment::get().get_resource_manager()->save();
 	}
 }
 
@@ -384,6 +424,7 @@ void EditorInputManager::mouse_button_callback(GLFWwindow* window, int button, i
 
 	const bool GUI_selected = Environment::get().get_gui_manager()->selected();
 	const int mode = Environment::get().get_input_manager()->get_mode();
+	const auto input_manager = Environment::get().get_input_manager();
 
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
 		if(GUI_selected) {
@@ -393,7 +434,7 @@ void EditorInputManager::mouse_button_callback(GLFWwindow* window, int button, i
 			Environment::get().get_resource_manager()->get_terrain()->adjust_tile_height(1);
 		}
 		else if (mode == EDITOR_SELECT_ENTITY) {
-			select_entity();
+			select_entity(input_manager->get_mouse_x(), input_manager->get_mouse_y());
 		}
 		else if (mode == EDITOR_PLACE_ENTITY) {
 			place_entity();

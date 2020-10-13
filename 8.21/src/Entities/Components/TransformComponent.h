@@ -11,8 +11,9 @@ class Entity;
 class FileReader;
 
 struct ReadTransformFile {
-	ReadTransformFile(FileReader& file);
+	ReadTransformFile(FileReader& file, std::string_view section = "Transform");
 
+	glm::vec3 _position = glm::vec3(0, 0, 0);
 	glm::vec3 _scale = glm::vec3(1, 1, 1);
 	glm::vec3 _rotation = glm::vec3(0, 0, 0);
 	float _speed = 0.001f;
@@ -21,7 +22,7 @@ struct ReadTransformFile {
 
 class TransformComponent : public Component {
 public:
-	TransformComponent(std::shared_ptr<Entity> entity, glm::vec3 scale, glm::vec3 rotation, float speed, bool collidable);
+	TransformComponent(std::shared_ptr<Entity> entity, glm::vec3 position, glm::vec3 scale, glm::vec3 rotation, float speed, bool collidable);
 	TransformComponent(std::shared_ptr<Entity> new_entity, const TransformComponent& rhs);
 	std::shared_ptr<Component> copy(std::shared_ptr<Entity> new_entity) const;
 
@@ -30,6 +31,8 @@ public:
 	const int get_type() const;
 
 	static constexpr int _type = TRANSFORM_COMPONENT;
+
+	void save(std::ofstream& file);
 
 	void move(glm::vec3 dir);
 	void set(glm::vec3 pos);

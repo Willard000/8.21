@@ -2,6 +2,7 @@
 #define COMPONENT_H
 
 #include <memory>
+#include <fstream>
 
 enum
 {
@@ -23,6 +24,8 @@ public:
 	virtual void update() = 0;
 
 	virtual const int get_type() const = 0;
+
+	virtual void save(std::ofstream& file) = 0;
 
 	std::shared_ptr<Entity> _entity;
 };

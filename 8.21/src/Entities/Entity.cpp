@@ -9,13 +9,15 @@ unsigned int make_unique_id() {
 	return id++;
 }
 
-ReadEntityFile::ReadEntityFile(const char* file_path) {
+ReadEntityFile::ReadEntityFile(const char* file_path, std::string_view section) {
 	FileReader file(file_path);
 
-	if (file.set_section("Entity")) {
+	if (file.set_section(section)) {
+		file.read(&_type, "type");
+		file.read(&_id, "id");
 		file.read(&_model_id, "model_id");
 		file.read(&_draw, "draw");
-		file.read(&_name, "str_name");
+		file.read(&_name, "name");
 	}
 
 	if(file.set_section("Transform")) {
@@ -23,10 +25,12 @@ ReadEntityFile::ReadEntityFile(const char* file_path) {
 	}
 }
 
-EntityLoader::EntityLoader(std::shared_ptr<Entity> entity) :
+EntityLoader::EntityLoader(std::shared_ptr<Entity> entity, const char* file) :
 	_entity				( entity ),
-	_entity_file		( find_file_path().c_str() )
+	_entity_file		( file )
 {
+	_entity->_type = _entity_file._type;
+	_entity->_id = _entity_file._id;
 	_entity->_name = _entity_file._name;
 	_entity->_model_id = _entity_file._model_id;
 	_entity->_draw = _entity_file._draw;
@@ -36,7 +40,7 @@ EntityLoader::EntityLoader(std::shared_ptr<Entity> entity) :
 	}
 }
 
-std::string EntityLoader::find_file_path() {
+std::string EntityLoader::default_file(std::string_view type, int id) {
 	FileReader file(ENTITY_FILE, FileReader::int_val);
 
 	if(!file.is_read()) {
@@ -45,17 +49,18 @@ std::string EntityLoader::find_file_path() {
 	}
 
 	std::string path;
-	file.set_section(_entity->get_type());
-	file.read(&path, _entity->get_id());
+	file.set_section(type);
+	file.read(&path, id);
 
 	return path;
 }
 
-// TransformComponent(std::shared_ptr<Entity> entity, glm::vec3 scale, glm::vec3 rotation, float speed, bool collidable);
+// TransformComponent(std::shared_ptr<Entity> entity, glm::vec3 position, glm::vec3 scale, glm::vec3 rotation, float speed, bool collidable);
 void EntityLoader::load_transform() {
 	const auto transform_file = _entity_file._transform_file;
 	_entity->_components[TRANSFORM_COMPONENT] = std::make_shared<TransformComponent>(
 		_entity,
+		transform_file->_position,
 		transform_file->_scale,
 		transform_file->_rotation,
 		transform_file->_speed,
@@ -127,8 +132,36 @@ void Entity::destroy() {
 	_destroy = true;
 }
 
-void Entity::load() {
-	EntityLoader loader(shared_from_this());
+// load file = Default if type and id are set
+// otherwise load from seperate file
+void Entity::load(std::string_view file) {
+	if (file == "Default") {
+		const auto type = _type;
+		const auto id = _id;
+		EntityLoader loader(shared_from_this(), EntityLoader::default_file(_type, _id).c_str());
+		// make sure type and id are correct -- ignore file
+		_type = type;
+		_id = id;
+	}
+	else {
+		EntityLoader loader(shared_from_this(), file.data());
+	}
+}
+
+void Entity::save(std::ofstream& file) {
+	file << "# Entity" << '\n';
+	file << "type " << _type << '\n';
+	file << "id " << _id << '\n';
+	file << "model_id " << _model_id << '\n';
+	file << "name " << _name << '\n';
+	file << "draw " << _draw << '\n';
+	file << '\n';
+
+	for(const auto& c : _components) {
+		if(c) {
+			c->save(file);
+		}
+	}
 }
 
 unsigned int Entity::get_unique_id() {

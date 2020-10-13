@@ -1,8 +1,10 @@
 - Sphere
 
 # Entity
+type Unit
+id 0
 model_id 4
-str_name Sphere
+name Sphere
 
 # Transform
 scale 0.1 0.1 0.1
