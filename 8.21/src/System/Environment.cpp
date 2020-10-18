@@ -7,6 +7,7 @@
 #include "../src/System/InputManager.h"
 #include "../src/System/GUIManager.h"
 #include "../src/System/Renderer.h"
+#include "../src/Network/Client.h"
 
 #include <cassert>
 
@@ -20,7 +21,8 @@ Environment::Environment() :
 	_resource_manager	( nullptr ),
 	_input_manager		( nullptr ),
 	_gui_manager		( nullptr ),
-	_renderer			( nullptr )
+	_renderer			( nullptr ),
+	_client				( nullptr )
 {
 	assert(!_instance);
 	_instance = this;
@@ -68,6 +70,10 @@ void Environment::set_renderer(Renderer* renderer) {
 	_renderer = renderer;
 }
 
+void Environment::set_client(Client* client) {
+	_client = client;
+}
+
 int Environment::get_mode() {
 	return _mode;
 }
@@ -98,6 +104,10 @@ GUIManager* Environment::get_gui_manager() {
 
 Renderer* Environment::get_renderer() {
 	return _renderer;
+}
+
+Client* Environment::get_client() {
+	return _client;
 }
 
 void Environment::shut_down() {
@@ -134,5 +144,10 @@ void Environment::shut_down() {
 	if(_renderer) {
 		delete _renderer;
 		_renderer = nullptr;
+	}
+
+	if(_client) {
+		delete _client;
+		_client = nullptr;
 	}
 }

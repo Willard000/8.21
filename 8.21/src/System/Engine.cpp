@@ -6,6 +6,7 @@
 #include "../src/System/InputManager.h"
 #include "../src/System/GUIManager.h"
 #include "../src/System/Renderer.h"
+#include "../src/Network/Client.h"
 
 #include <cassert>
 
@@ -37,6 +38,10 @@ Engine::Engine() :
 
 	Renderer* renderer = new Renderer;
 	_environment.set_renderer(renderer);
+
+	Client* client = new Client;
+	_environment.set_client(client);
+	client->c_startup();
 }
 
 Engine::~Engine() {

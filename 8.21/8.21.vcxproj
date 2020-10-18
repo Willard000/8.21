@@ -149,6 +149,9 @@
   <ItemGroup>
     <ClCompile Include="src\Entities\Components\TransformComponent.cpp" />
     <ClCompile Include="src\Entities\Entity.cpp" />
+    <ClCompile Include="src\Network\Client.cpp" />
+    <ClCompile Include="src\Network\Packet.cpp" />
+    <ClCompile Include="src\Network\Server.cpp" />
     <ClCompile Include="src\Resources\Camera.cpp" />
     <ClCompile Include="src\Resources\FontMap.cpp" />
     <ClCompile Include="src\Resources\GUI.cpp" />
@@ -177,6 +180,9 @@
     <ClInclude Include="src\Entities\Components\Component.h" />
     <ClInclude Include="src\Entities\Components\TransformComponent.h" />
     <ClInclude Include="src\Entities\Entity.h" />
+    <ClInclude Include="src\Network\Client.h" />
+    <ClInclude Include="src\Network\Packet.h" />
+    <ClInclude Include="src\Network\Server.h" />
     <ClInclude Include="src\Resources\Camera.h" />
     <ClInclude Include="src\Resources\FontMap.h" />
     <ClInclude Include="src\Resources\GUI.h" />

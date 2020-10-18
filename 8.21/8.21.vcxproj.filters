@@ -43,6 +43,12 @@
     <Filter Include="Source Files\Entities\Components">
       <UniqueIdentifier>{8efc5089-20e0-4a51-abf9-e976aa860eb2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Network">
+      <UniqueIdentifier>{aa976584-9be4-4594-924e-b8e887af4f84}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Network">
+      <UniqueIdentifier>{f808f35e-4037-4e3d-921f-febd173ec491}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\System\Main.cpp">
@@ -120,6 +126,15 @@
     <ClCompile Include="src\System\Renderer.cpp">
       <Filter>Source Files\System</Filter>
     </ClCompile>
+    <ClCompile Include="src\Network\Client.cpp">
+      <Filter>Source Files\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Network\Server.cpp">
+      <Filter>Source Files\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Network\Packet.cpp">
+      <Filter>Source Files\Network</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\System\Environment.h">
@@ -196,6 +211,15 @@
     </ClInclude>
     <ClInclude Include="src\System\Renderer.h">
       <Filter>Header Files\System</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Network\Client.h">
+      <Filter>Header Files\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Network\Server.h">
+      <Filter>Header Files\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Network\Packet.h">
+      <Filter>Header Files\Network</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -11,6 +11,7 @@ class ResourceManager;
 class InputManager;
 class GUIManager;
 class Renderer;
+class Client;
 
 class Environment {
 public:
@@ -25,6 +26,7 @@ public:
 	void set_input_manager(InputManager* input_manager);
 	void set_gui_manager(GUIManager* gui_manager);
 	void set_renderer(Renderer* renderer);
+	void set_client(Client* client);
 
 	int     get_mode();
 	Clock*  get_clock();
@@ -34,6 +36,7 @@ public:
 	InputManager* get_input_manager();
 	GUIManager* get_gui_manager();
 	Renderer* get_renderer();
+	Client* get_client();
 
 	void shut_down();
 
@@ -47,6 +50,7 @@ private:
 	InputManager* _input_manager;
 	GUIManager* _gui_manager;
 	Renderer* _renderer;
+	Client* _client;
 
 	static Environment* _instance;
 };

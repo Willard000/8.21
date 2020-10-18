@@ -1,0 +1,46 @@
+#ifndef CLIENT_H
+#define CLIENT_H
+
+#include <WinSock2.h>
+#include <ws2tcpip.h>
+
+#pragma comment(lib, "Ws2_32.lib")
+
+#include <thread>
+#include <unordered_map>
+#include <string>
+#include <string_view>
+
+class Client;
+
+typedef void(Client::*ClientFunction)(void* buf, int size);
+
+class Client {
+public:
+	Client();
+	~Client();
+
+	void c_startup();
+	bool c_send(const char* data, int* len);
+	void c_recieve();
+	bool c_connected();
+	void c_read(uint8_t* data);
+
+	void load_client_functions();
+
+	void set_id(void* buf, int size);
+private:
+	int _id;
+	bool _started;
+
+	WSAData _wsa_data;
+	SOCKET _connect_socket;
+
+	std::thread _recieve_thread;
+
+	std::unordered_map<std::string, ClientFunction> _client_functions;
+};
+
+/********************************************************************************************************************************************************/
+
+#endif
