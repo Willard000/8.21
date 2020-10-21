@@ -181,3 +181,7 @@ CollisionBox TransformComponent::get_collision_box() {
 		     _collision_box.min * _transform.get_scale() + _transform.get_position()
 	};
 }
+
+PacketData TransformComponent::packet_data() {
+	return std::move(PacketData(_transform, _direction, _destination, _y_rot, _turn, _speed, _collidable, _dest_reached, _collision_box));
+}

@@ -13,7 +13,7 @@
 
 class Client;
 
-typedef void(Client::*ClientFunction)(void* buf, int size);
+typedef void(Client::*ClientCommand)(void* buf, int size);
 
 class Client {
 public:
@@ -26,9 +26,13 @@ public:
 	bool c_connected();
 	void c_read(uint8_t* data);
 
-	void load_client_functions();
+	void load_client_commands();
 
+
+	void load_world_server();
 	void set_id(void* buf, int size);
+
+	int get_id();
 private:
 	int _id;
 	bool _started;
@@ -38,7 +42,7 @@ private:
 
 	std::thread _recieve_thread;
 
-	std::unordered_map<std::string, ClientFunction> _client_functions;
+	std::unordered_map<std::string, ClientCommand> _client_commands;
 };
 
 /********************************************************************************************************************************************************/

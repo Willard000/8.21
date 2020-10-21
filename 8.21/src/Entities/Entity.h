@@ -7,6 +7,8 @@
 #include <memory>
 #include <fstream>
 
+#include "../src/Network/Packet.h"
+
 #include "../src/Entities/Components/Component.h"
 #include "../src/Entities/Components/TransformComponent.h"
 
@@ -74,6 +76,8 @@ public:
 	void set_model_id(const int model_id);
 	void set_name(const std::string_view name);
 	void set_draw(bool draw);
+
+	std::vector<PacketData> packet_data();
 private:
 	unsigned int _unique_id;
 	int _id;

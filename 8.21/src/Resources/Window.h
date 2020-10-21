@@ -30,6 +30,9 @@ public:
 
 	void update();
 
+	void hide();
+	void show();
+
 	int get_width();
 	int get_height();
 	GLFWwindow* get_glfw_window();

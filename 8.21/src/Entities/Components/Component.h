@@ -4,6 +4,8 @@
 #include <memory>
 #include <fstream>
 
+#include "../src/Network/Packet.h"
+
 enum
 {
 	TRANSFORM_COMPONENT,
@@ -26,6 +28,8 @@ public:
 	virtual const int get_type() const = 0;
 
 	virtual void save(std::ofstream& file) = 0;
+
+	virtual PacketData packet_data() = 0;
 
 	std::shared_ptr<Entity> _entity;
 };

@@ -3,6 +3,7 @@
 
 #define MODE_EDITOR 0
 #define MODE_ENGINE 1
+#define MODE_SERVER 2
 
 class Clock;
 class Log;

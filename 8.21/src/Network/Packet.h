@@ -6,6 +6,7 @@
 class PacketData {
 public:
 	PacketData(const char* key);
+	PacketData(PacketData&& rhs) noexcept;
 
 	template<typename ... Args>
 	PacketData(Args ... args);
@@ -17,6 +18,11 @@ public:
 	void add(float data);
 	void add(double data);
 	void add(const char* data);
+	
+	template <class T>
+	void add(T data);
+
+	void add(PacketData&& rhs);
 
 	const char* c_str();
 	int length();
@@ -32,8 +38,22 @@ PacketData::PacketData(Args ... args)
 
 template<typename First, typename ... Rest>
 void PacketData::add(const First& first, const Rest& ... rest) {
+	_data.resize(4);
+	int header = 4;
+	memcpy(&_data[0], &header, sizeof(int));
+
 	add(first);
 	add(rest...);
+}
+
+template <class T>
+void PacketData::add(T data) {
+
+	uint8_t* ptr = static_cast<uint8_t*>((static_cast<void*>(&data)));
+	std::copy(ptr, ptr + sizeof(data), std::back_inserter(_data));
+
+	int size = _data.size();
+	memcpy(&_data[0], &size, sizeof(int));
 }
 
 #endif

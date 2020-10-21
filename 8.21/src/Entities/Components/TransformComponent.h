@@ -34,6 +34,8 @@ public:
 
 	void save(std::ofstream& file);
 
+	PacketData packet_data();
+
 	void move(glm::vec3 dir);
 	void set(glm::vec3 pos);
 	void set_direction(glm::vec3 dir);

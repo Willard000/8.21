@@ -203,3 +203,15 @@ bool Entity::get_destroy() {
 bool Entity::get_draw() {
 	return _draw;
 }
+
+std::vector<PacketData> Entity::packet_data() {
+	std::vector<PacketData> packet;
+
+	packet.push_back(std::move(PacketData(_unique_id, _id, _type, _model_id, _name, _draw, _destroy)));
+
+	for(const auto c : _components) {
+		packet.push_back(std::move(c->packet_data()));
+	}
+
+	return std::move(packet);
+}

@@ -62,6 +62,14 @@ void Window::update() {
 	_camera->update();
 }
 
+void Window::hide() {
+	glfwHideWindow(_window);
+}
+
+void Window::show() {
+	glfwShowWindow(_window);
+}
+
 int Window::get_width() {
 	return _width;
 }

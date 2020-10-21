@@ -11,14 +11,34 @@
 #include <mutex>
 #include <unordered_map>
 
+#include "../src/System/Environment.h"
+#include "../src/Entities/Entity.h"
+
+
+/********************************************************************************************************************************************************/
+
+class WorldServer {
+public:
+	WorldServer();
+
+	void load();
+
+protected:
+	int _map_id;
+
+	std::vector<std::shared_ptr<Entity>> _entities;
+
+	Environment _environment;
+};
+
 /********************************************************************************************************************************************************/
 
 class ServerClient;
 class Server;
 
-typedef void(Server::* ServerFunction)(void* buf, int size);
+typedef void(Server::* ServerCommand)(void* buf, int size);
 
-class Server {
+class Server : public WorldServer{
 public:
 	Server();
 	~Server();
@@ -27,9 +47,10 @@ public:
 	void s_accept();
 	void s_decline();
 	void s_recieve(std::shared_ptr<ServerClient> client);
-	bool s_send(const char* data, int* len, std::shared_ptr<ServerClient> client);
+	bool s_send(const char* data, int* len, int client_id);
 
-	void load_server_functions();
+	void load_server_commands();
+	void load_world_server_to_client(void* buf, int size);
 	void new_entity(void* buf, int size);
 	void move_entity(void* buf, int size);
 private:
@@ -38,7 +59,7 @@ private:
 
 	std::vector<std::shared_ptr<ServerClient>> _clients;
 
-	std::unordered_map<std::string, ServerFunction> _server_functions;
+	std::unordered_map<std::string, ServerCommand> _server_commands;
 
 	WSAData _wsa_data;
 	SOCKET _listen_socket;

@@ -27,7 +27,7 @@ Editor::Editor() :
 
 	ResourceManager* resource_manager = new ResourceManager;
 	_environment.set_resource_manager(resource_manager);
-	resource_manager->load_resources();
+	resource_manager->load_resources(1, 1, 1, 1, 1);
 
 	InputManager* input_manager = new EditorInputManager;
 	_environment.set_input_manager(input_manager);

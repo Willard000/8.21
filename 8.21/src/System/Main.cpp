@@ -3,7 +3,7 @@
 
 #include "Engine.h"
 #include "Editor.h"
-#include "../Network/Server.h""
+#include "../Network/Server.h"
 
 #include <thread>
 
@@ -23,6 +23,8 @@ void start_server() {
 	std::cout << "Server" << '\n';
 	Server server;
 	server.s_startup();
+
+
 	auto thread = std::thread(&Server::s_accept, &server);
 
 	while(1) {

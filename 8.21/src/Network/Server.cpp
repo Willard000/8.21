@@ -5,8 +5,16 @@
 
 #include <string>
 #include <iterator>
+#include <filesystem>
 
 #include "Packet.h"
+
+#include "../src/Utility/Clock.h"
+#include "../src/Resources/Window.h"
+#include "../src/System/ResourceManager.h"
+
+#include <GLFW/glfw3.h>
+
 
 #define DEFAULT_PORT "23001"
 #define MAX_CLIENTS 12
@@ -16,6 +24,42 @@
 void print_error(int val) {
 	if (val == SOCKET_ERROR) {
 		std::cout << "Error --- " << WSAGetLastError() << '\n';
+	}
+}
+
+/********************************************************************************************************************************************************/
+
+WorldServer::WorldServer() :
+	_map_id			( -1 )
+{
+	if (!glfwInit()) {
+		//...
+		assert(NULL);
+	}
+
+	_environment.set_mode(MODE_SERVER);
+
+	Clock* clock = new Clock;
+	_environment.set_clock(clock);
+
+	Window* window = new Window;
+	window->hide();
+	_environment.set_window(window);
+
+	ResourceManager* resource_manager = new ResourceManager;
+	_environment.set_resource_manager(resource_manager);
+	resource_manager->load_resources(1, 0, 1, 1, 0);
+}
+
+void WorldServer::load() {
+	// send map id
+
+	// load map entities to server
+
+	for (auto& p : std::filesystem::directory_iterator("Data\\Map\\Entities")) {
+		auto entity = std::make_shared<Entity>();
+		entity->load(p.path().string());
+		_entities.push_back(entity);
 	}
 }
 
@@ -74,6 +118,9 @@ void Server::s_startup() {
 	int r_listen = listen(_listen_socket, SOMAXCONN);
 	std::cout << "listen --- " << r_listen << '\n';
 	print_error(r_listen);
+
+	load_server_commands();
+	WorldServer::load();
 }
 
 void Server::s_accept() {
@@ -96,16 +143,16 @@ void Server::s_accept() {
 
 		auto client = std::make_shared<ServerClient>(client_socket, _clients.size());
 
-		PacketData data("set_id", client->_id);
-		int len = data.length();
-
-		s_send(data.c_str(), &len, client);
-
 		_m.lock();
 		_clients.push_back(client);
 		_m.unlock();
 
 		client->_thread = std::thread(&Server::s_recieve, this, client);
+
+		PacketData data("set_id", client->_id);
+		int len = data.length();
+
+		s_send(data.c_str(), &len, client->_id);
 	}
 }
 
@@ -114,20 +161,47 @@ void Server::s_decline() {
 }
 
 void Server::s_recieve(std::shared_ptr<ServerClient> client) {
-	char recvbuf[512];
+	char recvbuf[1024];
 	char* ptr;
-	int r_recv = -1, r_send = -1;
+	int r_recv = -1;
 	int recvbuflen = 512;
+	int bytes_handled = 0;
+	int remaining_bytes = 0;
+	int packet_length = 0;
 
 	do {
-		r_recv = recv(client->_client_socket, recvbuf, recvbuflen - 1, 0);
+		bytes_handled = 0;
+		r_recv = recv(client->_client_socket, recvbuf + remaining_bytes, recvbuflen, 0);
 		if (r_recv > 0) {
 			std::cout << "Recieved --- " << r_recv << '\n';
 			ptr = recvbuf;
-			std::cout << recvbuf << '\n';
 
-			assert(r_recv > 54);
-			(this->*_server_functions.at(recvbuf))(static_cast<void*>(recvbuf - 54), r_recv - 54);
+			memcpy(&packet_length, ptr, sizeof(int));
+			remaining_bytes = r_recv + remaining_bytes;
+
+			while (remaining_bytes >= packet_length) {
+				std::cout << ptr + 4 << '\n';
+
+				const char* key = ptr + 4; // skip int header
+				if (_server_commands.find(key) == _server_commands.end()) {
+					std::cout << "Unknown Server Command : " << key << '\n';
+				}
+				else {
+					(this->*_server_commands.at(ptr + 4))(static_cast<void*>(ptr + 58), packet_length - 58);
+				}
+
+				bytes_handled += packet_length;
+				remaining_bytes -= packet_length;
+
+				if (remaining_bytes > 4) {
+					ptr = recvbuf + bytes_handled;
+					memcpy(&packet_length, ptr, sizeof(int));
+				}
+			}
+
+			if (remaining_bytes > 0) {
+				memcpy(recvbuf, ptr, remaining_bytes);
+			}
 		}
 		else if (r_recv == 0) {
 			std::cout << "Close Connection" << '\n';
@@ -135,7 +209,6 @@ void Server::s_recieve(std::shared_ptr<ServerClient> client) {
 		else {
 			std::cout << "Recv Error : " << WSAGetLastError() << '\n';
 		}
-
 	} while (r_recv > 0);
 
 	_m.lock();
@@ -149,10 +222,23 @@ void Server::s_recieve(std::shared_ptr<ServerClient> client) {
 	_m.unlock();
 }
 
-bool Server::s_send(const char* data, int* len, std::shared_ptr<ServerClient> client) {
+bool Server::s_send(const char* data, int* len, int client_id) {
+	assert(*len <= 512);
+
+	std::shared_ptr<ServerClient> client = nullptr;
+	for(const auto c : _clients) {
+		if(c->_id == client_id) {
+			client = c;
+		}
+	}
+	if(!client) {
+		// client doesnt exist / disconnected
+		std::cout << "Client -- " << client_id << " Doesnt exist " << '\n';
+		return false;
+	}
+
 	int total = 0;
 	int bytes_left = *len;
-
 	while (total < bytes_left) {
 		int r_send = send(client->_client_socket, data + total, bytes_left, 0);
 		std::cout << "send Result: " << r_send << '\n';
@@ -170,8 +256,27 @@ bool Server::s_send(const char* data, int* len, std::shared_ptr<ServerClient> cl
 	return true;
 }
 
-void Server::load_server_functions() {
+void Server::load_server_commands() {
+	_server_commands.emplace("load_world_server", &Server::load_world_server_to_client);
+}
 
+// Params: int client_id
+void Server::load_world_server_to_client(void* buf, int size) {
+	assert(size == sizeof(int));
+	int client_id;
+	memcpy(&client_id, buf, sizeof(int));
+
+	assert(_clients.size() >= client_id);
+
+	for(const auto e : _entities) {
+		auto packet_data_vec = e->packet_data();
+		PacketData packet("load_entity");
+		for(auto& p : packet_data_vec) {
+			packet.add(std::move(p));
+		}
+		int len = packet.length();
+		s_send(packet.c_str(), &len, client_id);
+	}
 }
 
 void Server::new_entity(void* buf, int size) {
@@ -185,8 +290,8 @@ void Server::move_entity(void* buf, int size) {
 /********************************************************************************************************************************************************/
 
 ServerClient::ServerClient(SOCKET client_socket, int id) :
-	_id(id),
-	_client_socket(client_socket)
+	_id				( id ),
+	_client_socket	( client_socket )
 {}
 
 ServerClient::~ServerClient() {

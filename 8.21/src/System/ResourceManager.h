@@ -116,7 +116,7 @@ public:
 	ResourceManager();
 	~ResourceManager();
 
-	void load_resources();
+	void load_resources(bool programs, bool textures, bool models, bool entites, bool map);
 	void update();
 	void draw();
 

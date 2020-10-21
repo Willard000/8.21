@@ -297,13 +297,13 @@ ResourceManager::ResourceManager()
 ResourceManager::~ResourceManager() 
 {}
 
-void ResourceManager::load_resources() {
-	load_programs();
-	load_textures();
-	load_models();
-	load_default_entities();
-	load_map();
-	load_entities();
+void ResourceManager::load_resources(bool programs, bool textures, bool models, bool entities, bool map) {
+	if(programs)	load_programs();
+	if(textures)	load_textures();
+	if(models)		load_models();
+	if(entities)	load_default_entities();
+	if(map)			load_map();
+	//load_entities();
 }
 
 void ResourceManager::update() {
