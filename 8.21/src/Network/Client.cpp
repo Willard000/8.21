@@ -5,6 +5,10 @@
 
 #include "Packet.h"
 
+#include "../src/Entities/Entity.h"
+#include "../src/System/Environment.h"
+#include "../src/System/ResourceManager.h"
+
 #define DEFAULT_PORT "23001"
 #define DEFAULT_HOST "192.168.1.4"
 
@@ -63,7 +67,7 @@ void Client::c_startup() {
 }
 
 bool Client::c_send(const char* data, int* len) {
-	assert(*len <= 512);
+	assert(*len <= 1024);
 
 	int total = 0;
 	int bytes_left = *len;
@@ -85,56 +89,60 @@ bool Client::c_send(const char* data, int* len) {
 }
 
 void Client::c_recieve() {
-	char recvbuf[1024];
+	char recvbuf[2048];
 	char* ptr;
 	int r_recv = -1;
-	int recvbuflen = 512;
+	int recvbuflen = 1024;
 	int bytes_handled = 0;
 	int remaining_bytes = 0;
 	int packet_length = 0;
 
 	do {
-		std::cout << "Waiting for server..." << '\n';
 		bytes_handled = 0;
 		r_recv = recv(_connect_socket, recvbuf + remaining_bytes, recvbuflen, 0);
-		if(r_recv > 0) {
+		if (r_recv > 0) {
 			std::cout << "Recieved --- " << r_recv << '\n';
 			ptr = recvbuf;
-
-			memcpy(&packet_length, ptr, sizeof(int));
 			remaining_bytes = r_recv + remaining_bytes;
 
-			while (remaining_bytes >= packet_length) {
-				std::cout << ptr + 4 << '\n';
+			if (remaining_bytes >= 4) {
+				memcpy(&packet_length, ptr, sizeof(int));
 
-				const char* key = ptr + 4; // skip int header
-				if (_client_commands.find(key) == _client_commands.end()) {
-					std::cout << "Unknown Client Command : " << key << '\n';
-				}
-				else {
-					(this->*_client_commands.at(ptr + 4))(static_cast<void*>(ptr + 58), packet_length - 58);
+				while (remaining_bytes >= packet_length) {
+					std::cout << ptr + 4 << '\n';
+
+					const char* key = ptr + 4; // skip int header
+					int command_length = strlen(ptr + 4) + 1;
+					if (_client_commands.find(key) == _client_commands.end()) {
+						std::cout << "Unknown Client Command : " << key << '\n';
+					}
+					else {
+						(this->*_client_commands.at(ptr + 4))(static_cast<void*>(ptr + command_length + 4), packet_length - command_length - 4);
+					}
+
+					bytes_handled += packet_length;
+					remaining_bytes -= packet_length;
+
+					if (remaining_bytes >= 4) {
+						ptr = recvbuf + bytes_handled;
+						memcpy(&packet_length, ptr, sizeof(int));
+					}
 				}
 
-				bytes_handled += packet_length;
-				remaining_bytes -= packet_length;
-
-				if (remaining_bytes > 4) {
-					ptr = recvbuf + bytes_handled;
-					memcpy(&packet_length, ptr, sizeof(int));
-				}
 			}
 
-			if(remaining_bytes > 0) {
+			if (remaining_bytes > 0) {
 				memcpy(recvbuf, ptr, remaining_bytes);
 			}
 		}
-		else if(r_recv == 0) {
+		else if (r_recv == 0) {
 			std::cout << "Close Connection" << '\n';
 		}
 		else {
 			std::cout << "Recv Error : " << WSAGetLastError() << '\n';
 		}
 	} while (r_recv > 0);
+
 }
 
 bool Client::c_connected() {
@@ -150,12 +158,23 @@ void Client::load_world_server() {
 
 void Client::load_client_commands() {
 	_client_commands.emplace("set_id", &Client::set_id);
+	_client_commands.emplace("load_entity", &Client::load_entity);
 }
 
 void Client::set_id(void* buf, int size) {
 	assert(size == sizeof(int));
 
 	memcpy(&_id, buf, sizeof(int));
+}
+
+//_unique_id, _id, _type, _model_id, _name, _draw, _destroy
+
+void Client::load_entity(void* buf, int size) {
+	std::shared_ptr<Entity> entity = std::make_shared<Entity>();
+
+	entity->load_buffer(buf, size);
+	
+	Environment::get().get_resource_manager()->add_entity(entity);
 }
 
 int Client::get_id() {

@@ -37,6 +37,21 @@ ReadTransformFile::ReadTransformFile(FileReader& file, std::string_view section)
 	}
 }
 
+TransformComponent::TransformComponent() :
+	Component				( nullptr )
+{}
+
+TransformComponent::TransformComponent(std::shared_ptr<Entity> entity) :
+	Component				( entity ),
+	_speed					( 0 ),
+	_collidable				( 0 ),
+	_direction				( glm::vec3(0, 0, 0) ),
+	_destination			( glm::vec3(0, 0, 0) ),
+	_dest_reached			( true ),
+	_y_rot					( 0 ),
+	_turn					( 0 )
+{}
+
 TransformComponent::TransformComponent(std::shared_ptr<Entity> entity, glm::vec3 position, glm::vec3 scale, glm::vec3 rotation, float speed, bool collidable) :
 	Component				( entity ),
 	_transform				( position, scale, rotation ),
@@ -183,5 +198,52 @@ CollisionBox TransformComponent::get_collision_box() {
 }
 
 PacketData TransformComponent::packet_data() {
-	return std::move(PacketData(_transform, _direction, _destination, _y_rot, _turn, _speed, _collidable, _dest_reached, _collision_box));
+	return std::move(PacketData("Transform", _transform, _direction, _destination, _y_rot, _turn, _speed, _collidable, _dest_reached, _collision_box));
+}
+
+int TransformComponent::load_buffer(void* buf) {
+	uint8_t* ptr = static_cast<uint8_t*>(buf);
+	int byte = 0;
+
+	Transform* t_ptr = static_cast<Transform*>(static_cast<void*>(ptr));
+	std::copy(t_ptr, t_ptr + 1, &_transform);
+	ptr += sizeof(Transform);
+	byte += sizeof(Transform);
+
+	glm::vec3* v_ptr = static_cast<glm::vec3*>(static_cast<void*>(ptr));
+	std::copy(v_ptr, v_ptr + 1, &_direction);
+	ptr += sizeof(glm::vec3);
+	byte += sizeof(glm::vec3);
+
+	v_ptr = static_cast<glm::vec3*>(static_cast<void*>(ptr));
+	std::copy(v_ptr, v_ptr + 1, &_destination);
+	ptr += sizeof(glm::vec3);
+	byte += sizeof(glm::vec3);
+
+	std::copy(ptr, ptr + sizeof(float), &_y_rot);
+	ptr += sizeof(float);
+	byte += sizeof(float);
+
+	std::copy(ptr, ptr + sizeof(int), &_turn);
+	ptr += sizeof(int);
+	byte += sizeof(int);
+
+	std::copy(ptr, ptr + sizeof(float), &_speed);
+	ptr += sizeof(float);
+	byte += sizeof(float);
+
+	std::copy(ptr, ptr + sizeof(bool), &_collidable);
+	ptr += sizeof(bool);
+	byte += sizeof(bool);
+
+	std::copy(ptr, ptr + sizeof(bool), &_dest_reached);
+	ptr += sizeof(bool);
+	byte += sizeof(bool);
+
+	CollisionBox* c_ptr = static_cast<CollisionBox*>(static_cast<void*>(ptr));
+	std::copy(c_ptr, c_ptr + 1, &_collision_box);
+	ptr += sizeof(CollisionBox);
+	byte += sizeof(CollisionBox);
+
+	return byte;
 }

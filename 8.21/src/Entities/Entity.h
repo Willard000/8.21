@@ -78,6 +78,7 @@ public:
 	void set_draw(bool draw);
 
 	std::vector<PacketData> packet_data();
+	void load_buffer(void* buf, int size);
 private:
 	unsigned int _unique_id;
 	int _id;

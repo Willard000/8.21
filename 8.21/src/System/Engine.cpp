@@ -43,7 +43,7 @@ Engine::Engine() :
 	_environment.set_client(client);
 	client->c_startup();
 
-	while (client->get_id() == -1) {
+	while(client->get_id() == -1) {
 		// wait
 	}
 

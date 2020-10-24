@@ -22,6 +22,8 @@ struct ReadTransformFile {
 
 class TransformComponent : public Component {
 public:
+	TransformComponent();
+	TransformComponent(std::shared_ptr<Entity> entity);
 	TransformComponent(std::shared_ptr<Entity> entity, glm::vec3 position, glm::vec3 scale, glm::vec3 rotation, float speed, bool collidable);
 	TransformComponent(std::shared_ptr<Entity> new_entity, const TransformComponent& rhs);
 	std::shared_ptr<Component> copy(std::shared_ptr<Entity> new_entity) const;
@@ -35,6 +37,8 @@ public:
 	void save(std::ofstream& file);
 
 	PacketData packet_data();
+
+	int load_buffer(void* buf);
 
 	void move(glm::vec3 dir);
 	void set(glm::vec3 pos);

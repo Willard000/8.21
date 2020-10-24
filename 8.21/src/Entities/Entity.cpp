@@ -73,7 +73,9 @@ Entity::Entity() :
 	_id			   	    ( -1 ),
 	_model_id			( 0 ),
 	_destroy			( false ),
-	_draw				( false )
+	_draw				( false ),
+	_type				( "" ),
+	_name				( "" )
 {}
 
 Entity::Entity(const std::string_view type, const int id) :
@@ -99,8 +101,8 @@ Entity::Entity(const Entity& rhs) :
 	// ready to copy
 }
 
-Entity::~Entity() 
-{}
+Entity::~Entity() {
+}
 
 void Entity::add(std::shared_ptr<Component> component) {
 	_components[component->get_type()] = component;
@@ -204,14 +206,71 @@ bool Entity::get_draw() {
 	return _draw;
 }
 
+#define ENTITY_BYTE_SIZE sizeof(int) * 3 + sizeof(bool) * 2 + STR_PADDING * 2
+
 std::vector<PacketData> Entity::packet_data() {
 	std::vector<PacketData> packet;
 
-	packet.push_back(std::move(PacketData(_unique_id, _id, _type, _model_id, _name, _draw, _destroy)));
+	packet.push_back(std::move(PacketData(_unique_id, _id, _model_id, _draw, _destroy, _type.c_str(), _name.c_str())));
 
 	for(const auto c : _components) {
 		packet.push_back(std::move(c->packet_data()));
 	}
 
-	return std::move(packet);
+	return packet;
+}
+
+#include <iostream>
+void Entity::load_buffer(void* buf, int size) {
+	assert(size >= ENTITY_BYTE_SIZE);
+
+	uint8_t* ptr = static_cast<uint8_t*>(buf);
+	int byte = 0;
+
+	std::copy(ptr, ptr + sizeof(unsigned int), &_unique_id);
+	ptr += sizeof(unsigned int);
+	byte += sizeof(unsigned int);
+
+	std::copy(ptr, ptr + sizeof(int), &_id);
+	ptr += sizeof(int);
+	byte += sizeof(int);
+
+	std::copy(ptr, ptr + sizeof(int), &_model_id);
+	ptr += sizeof(int);
+	byte += sizeof(int);
+
+	std::copy(ptr, ptr + sizeof(bool), &_draw);
+	ptr += sizeof(bool);
+	byte += sizeof(bool);
+
+	std::copy(ptr, ptr + sizeof(bool), &_destroy);
+	ptr += sizeof(bool);
+	byte += sizeof(bool);
+
+	_type.assign(reinterpret_cast<const char*>(ptr));
+	byte += strlen(reinterpret_cast<const char*>(ptr)) + 1;
+	ptr += strlen(reinterpret_cast<const char*>(ptr)) + 1;
+
+	_name.assign(reinterpret_cast<const char*>(ptr));
+	byte += strlen(reinterpret_cast<const char*>(ptr)) + 1;
+	ptr += strlen(reinterpret_cast<const char*>(ptr)) + 1;
+
+	while (byte < size) {
+		const char* component = reinterpret_cast<const char*>(ptr);
+		byte += strlen(reinterpret_cast<const char*>(ptr)) + 1;
+		ptr += strlen(reinterpret_cast<const char*>(ptr)) + 1;
+
+		if(!strcmp(component, "Transform")) {
+			if(!_components.at(TRANSFORM_COMPONENT)) {
+				_components.at(TRANSFORM_COMPONENT) = std::make_shared<TransformComponent>(shared_from_this());
+			}
+			byte += _components.at(TRANSFORM_COMPONENT)->load_buffer(ptr);
+		}
+		else {
+			assert(false); // invalid buffer component data
+		}
+
+	}
+
+	std::cout << " " << '\n';
 }

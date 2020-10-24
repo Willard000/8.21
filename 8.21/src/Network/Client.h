@@ -31,6 +31,7 @@ public:
 
 	void load_world_server();
 	void set_id(void* buf, int size);
+	void load_entity(void* buf, int size);
 
 	int get_id();
 private:

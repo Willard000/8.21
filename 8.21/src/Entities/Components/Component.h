@@ -31,6 +31,8 @@ public:
 
 	virtual PacketData packet_data() = 0;
 
+	virtual int load_buffer(void* buf) = 0;
+
 	std::shared_ptr<Entity> _entity;
 };
 

@@ -3,8 +3,6 @@
 #include <cassert>
 #include <iterator>
 
-#define VALID_STR_LEN(str) strlen(str) < 54
-
 PacketData::PacketData(const char* key) {
 	_data.resize(4);
 	int header = 4;
@@ -42,20 +40,28 @@ void PacketData::add(double data) {
 }
 
 void PacketData::add(const char* data) {
-	assert(VALID_STR_LEN(data));
+	std::copy(data, data + strlen(data) + 1, std::back_inserter(_data));
 
-	char buf[54];
-	memset(&buf, 0, 54);
-	memcpy(&buf, data, strlen(data));
+	int size = _data.size();
+	memcpy(&_data[0], &size, sizeof(int));
+}
 
-	std::copy(buf, buf + 54, std::back_inserter(_data));
+void PacketData::add(std::string data) {
+	assert(false); // use c_str()
+	assert(data.size() <= STR_PADDING);
+
+	char buf[STR_PADDING];
+	memset(&buf, 0, STR_PADDING);
+	memcpy(&buf, data.data(), data.size());
+
+	std::copy(buf, buf + STR_PADDING, std::back_inserter(_data));
 
 	int size = _data.size();
 	memcpy(&_data[0], &size, sizeof(int));
 }
 
 void PacketData::add(PacketData&& rhs) {
-	_data.insert(_data.end(), std::make_move_iterator(rhs._data.begin()), std::make_move_iterator(rhs._data.end()));
+	_data.insert(_data.end(), std::make_move_iterator(rhs._data.begin() + 4), std::make_move_iterator(rhs._data.end()));
 
 	int size = _data.size();
 	memcpy(&_data[0], &size, sizeof(int));

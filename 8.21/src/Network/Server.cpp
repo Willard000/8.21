@@ -161,10 +161,10 @@ void Server::s_decline() {
 }
 
 void Server::s_recieve(std::shared_ptr<ServerClient> client) {
-	char recvbuf[1024];
+	char recvbuf[2048];
 	char* ptr;
 	int r_recv = -1;
-	int recvbuflen = 512;
+	int recvbuflen = 1024;
 	int bytes_handled = 0;
 	int remaining_bytes = 0;
 	int packet_length = 0;
@@ -175,28 +175,32 @@ void Server::s_recieve(std::shared_ptr<ServerClient> client) {
 		if (r_recv > 0) {
 			std::cout << "Recieved --- " << r_recv << '\n';
 			ptr = recvbuf;
-
-			memcpy(&packet_length, ptr, sizeof(int));
 			remaining_bytes = r_recv + remaining_bytes;
 
-			while (remaining_bytes >= packet_length) {
-				std::cout << ptr + 4 << '\n';
+			if (remaining_bytes >= 4) {
+				memcpy(&packet_length, ptr, sizeof(int));
 
-				const char* key = ptr + 4; // skip int header
-				if (_server_commands.find(key) == _server_commands.end()) {
-					std::cout << "Unknown Server Command : " << key << '\n';
-				}
-				else {
-					(this->*_server_commands.at(ptr + 4))(static_cast<void*>(ptr + 58), packet_length - 58);
+				while (remaining_bytes >= packet_length) {
+					std::cout << ptr + 4 << '\n';
+
+					const char* key = ptr + 4; // skip int header
+					int command_length = strlen(ptr + 4) + 1;
+					if (_server_commands.find(key) == _server_commands.end()) {
+						std::cout << "Unknown Server Command : " << key << '\n';
+					}
+					else {
+						(this->*_server_commands.at(ptr + 4))(static_cast<void*>(ptr + command_length + 4), packet_length - command_length - 4);
+					}
+
+					bytes_handled += packet_length;
+					remaining_bytes -= packet_length;
+
+					if (remaining_bytes >= 4) {
+						ptr = recvbuf + bytes_handled;
+						memcpy(&packet_length, ptr, sizeof(int));
+					}
 				}
 
-				bytes_handled += packet_length;
-				remaining_bytes -= packet_length;
-
-				if (remaining_bytes > 4) {
-					ptr = recvbuf + bytes_handled;
-					memcpy(&packet_length, ptr, sizeof(int));
-				}
 			}
 
 			if (remaining_bytes > 0) {
@@ -223,7 +227,7 @@ void Server::s_recieve(std::shared_ptr<ServerClient> client) {
 }
 
 bool Server::s_send(const char* data, int* len, int client_id) {
-	assert(*len <= 512);
+	assert(*len <= 1024);
 
 	std::shared_ptr<ServerClient> client = nullptr;
 	for(const auto c : _clients) {
@@ -271,10 +275,12 @@ void Server::load_world_server_to_client(void* buf, int size) {
 	for(const auto e : _entities) {
 		auto packet_data_vec = e->packet_data();
 		PacketData packet("load_entity");
+
 		for(auto& p : packet_data_vec) {
 			packet.add(std::move(p));
 		}
 		int len = packet.length();
+
 		s_send(packet.c_str(), &len, client_id);
 	}
 }

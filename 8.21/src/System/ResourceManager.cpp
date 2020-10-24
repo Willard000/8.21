@@ -262,7 +262,13 @@ void EntityManager::load_entities() {
 	}
 }
 
+void EntityManager::add_entity(std::shared_ptr<Entity> entity) {
+	std::lock_guard<std::mutex> lock(_em_mutex);
+	_entities.push_back(entity);
+}
+
 std::shared_ptr<Entity> EntityManager::new_entity(std::string_view type, int id) {
+	std::lock_guard<std::mutex> lock(_em_mutex);
 	const auto default_entity = _default_entities.at(type.data()).at(id);
 	const auto new_entity = std::make_shared<Entity>(*default_entity);
 	new_entity->copy(*default_entity);
@@ -273,6 +279,7 @@ std::shared_ptr<Entity> EntityManager::new_entity(std::string_view type, int id)
 }
 
 void EntityManager::remove_entity(std::shared_ptr<Entity> entity) {
+	std::lock_guard<std::mutex> lock(_em_mutex);
 	for(auto it = _entities.begin(); it != _entities.end(); ++it) {
 		if((*it) == entity) {
 			_entities.erase(it);
@@ -282,6 +289,7 @@ void EntityManager::remove_entity(std::shared_ptr<Entity> entity) {
 }
 
 std::shared_ptr<Entity> EntityManager::get_default_entity(std::string_view type, unsigned int id) {
+	std::lock_guard<std::mutex> lock(_em_mutex);
 	return _default_entities.at(type.data()).at(id);
 }
 
@@ -314,8 +322,11 @@ void ResourceManager::draw() {
 	const auto mode = Environment::get().get_mode();
 	_terrain->draw(GL_TRIANGLES, mode == MODE_EDITOR);
 
+	std::lock_guard<std::mutex> lock(_em_mutex);
 	for(const auto entity : _entities) {
-		_models.at(entity->get_model_id())->draw(entity->get<TransformComponent>()->_transform);
+		if (const auto transform = entity->get<TransformComponent>()) {
+			_models.at(entity->get_model_id())->draw(transform->_transform);
+		}
 	}
 }
 

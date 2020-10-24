@@ -7,6 +7,7 @@
 #include <string>
 
 #include <memory>
+#include <mutex>
 
 struct GUIIcon;
 struct Texture;
@@ -95,6 +96,7 @@ public:
 	void save_entities(std::string_view folder);
 	void load_entities();
 
+	void add_entity(std::shared_ptr<Entity> entity);
 	std::shared_ptr<Entity> new_entity(std::string_view type, int id);
 	std::shared_ptr<Entity> get_default_entity(std::string_view type, unsigned int id);
 
@@ -106,6 +108,8 @@ protected:
 
 	// <Type, <ID, Entity>>
 	std::map<std::string, std::map<unsigned int, std::shared_ptr<Entity>>> _default_entities;
+
+	std::mutex _em_mutex;
 private:
 };
 
