@@ -311,7 +311,9 @@ void ResourceManager::load_resources(bool programs, bool textures, bool models, 
 	if(models)		load_models();
 	if(entities)	load_default_entities();
 	if(map)			load_map();
-	//load_entities();
+	if (Environment::get().get_mode() == MODE_EDITOR) {
+		load_entities();
+	}
 }
 
 void ResourceManager::update() {

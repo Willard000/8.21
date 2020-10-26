@@ -271,6 +271,4 @@ void Entity::load_buffer(void* buf, int size) {
 		}
 
 	}
-
-	std::cout << " " << '\n';
 }

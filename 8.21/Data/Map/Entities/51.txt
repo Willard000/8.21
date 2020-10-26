@@ -6,7 +6,7 @@ name Tree
 draw 1
 
 # Transform
-position 17.5 1 16.5
+position 22.5 1 24.5
 scale 1 1 1
 rotation 0 0 0
 speed 1

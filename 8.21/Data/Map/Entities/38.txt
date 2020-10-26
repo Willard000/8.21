@@ -1,14 +1,14 @@
 # Entity
 type Object
-id 1
-model_id 1
-name Clay Rock
+id 0
+model_id 0
+name Tree
 draw 1
 
 # Transform
-position 11 1 22.5
+position 14.5 1 21.5
 scale 1 1 1
 rotation 0 0 0
-speed 0.001
+speed 1
 collidable 1
 
