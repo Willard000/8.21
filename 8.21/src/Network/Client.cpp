@@ -9,6 +9,8 @@
 #include "../src/System/Environment.h"
 #include "../src/System/ResourceManager.h"
 
+#include "Fmtout.h"
+
 #define DEFAULT_PORT "23001"
 #define DEFAULT_HOST "192.168.1.4"
 
@@ -73,9 +75,9 @@ bool Client::c_send(const char* data, int* len) {
 	int bytes_left = *len;
 	while (total < bytes_left) {
 		int r_send = send(_connect_socket, data + total, bytes_left, 0);
-		std::cout << "send Result: " << r_send << '\n';
+		dbgout("Sending...", r_send);
 		if (r_send == SOCKET_ERROR) {
-			std::cout << "Send Error: " << WSAGetLastError() << '\n';
+			dbgout("Send Error --- ", WSAGetLastError());
 			return false;
 		}
 
@@ -101,7 +103,7 @@ void Client::c_recieve() {
 		bytes_handled = 0;
 		r_recv = recv(_connect_socket, recvbuf + remaining_bytes, recvbuflen, 0);
 		if (r_recv > 0) {
-			std::cout << "Recieved --- " << r_recv << '\n';
+			dbgout("Receiving...", r_recv);
 			ptr = recvbuf;
 			remaining_bytes = r_recv + remaining_bytes;
 
@@ -109,12 +111,12 @@ void Client::c_recieve() {
 				memcpy(&packet_length, ptr, sizeof(int));
 
 				while (remaining_bytes >= packet_length) {
-					std::cout << ptr + 4 << '\n';
+					dbgout("Command --- ", ptr + 4); // command
 
 					const char* key = ptr + 4; // skip int header
 					int command_length = strlen(ptr + 4) + 1;
 					if (_client_commands.find(key) == _client_commands.end()) {
-						std::cout << "Unknown Client Command : " << key << '\n';
+						dbgout("Unknown Client Command --- ", key);
 					}
 					else {
 						(this->*_client_commands.at(ptr + 4))(static_cast<void*>(ptr + command_length + 4), packet_length - command_length - 4);
@@ -136,10 +138,10 @@ void Client::c_recieve() {
 			}
 		}
 		else if (r_recv == 0) {
-			std::cout << "Close Connection" << '\n';
+			fmtout("Close Connection");
 		}
 		else {
-			std::cout << "Recv Error : " << WSAGetLastError() << '\n';
+			fmtout("Recv Error --- ", WSAGetLastError());
 		}
 	} while (r_recv > 0);
 

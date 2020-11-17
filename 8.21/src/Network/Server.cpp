@@ -13,6 +13,8 @@
 #include "../src/Resources/Window.h"
 #include "../src/System/ResourceManager.h"
 
+#include "Fmtout.h"
+
 #include <GLFW/glfw3.h>
 
 
@@ -128,13 +130,13 @@ void Server::s_accept() {
 	while (_accept) {
 		SOCKET client_socket = INVALID_SOCKET;
 
-		std::cout << "Waiting for client..." << '\n';
+		fmtout("Waiting for client...");
 		client_socket = accept(_listen_socket, nullptr, nullptr);
 		if (client_socket == INVALID_SOCKET) {
-			std::cout << "Client Accept Error --- " << WSAGetLastError << '\n';
+			fmtout("Client Accept Error --- ", WSAGetLastError);
 		}
 		assert((client_socket != INVALID_SOCKET));
-		std::cout << "New Connection" << '\n';
+		fmtout("New Connection");
 
 		if (_clients.size() >= MAX_CLIENTS) {
 			// reject
@@ -173,7 +175,7 @@ void Server::s_recieve(std::shared_ptr<ServerClient> client) {
 		bytes_handled = 0;
 		r_recv = recv(client->_client_socket, recvbuf + remaining_bytes, recvbuflen, 0);
 		if (r_recv > 0) {
-			std::cout << "Recieved --- " << r_recv << '\n';
+			dbgout("Receiving...", r_recv);
 			ptr = recvbuf;
 			remaining_bytes = r_recv + remaining_bytes;
 
@@ -181,12 +183,12 @@ void Server::s_recieve(std::shared_ptr<ServerClient> client) {
 				memcpy(&packet_length, ptr, sizeof(int));
 
 				while (remaining_bytes >= packet_length) {
-					std::cout << ptr + 4 << '\n';
+					dbgout("Command --- ", ptr + 4); // command
 
 					const char* key = ptr + 4; // skip int header
 					int command_length = strlen(ptr + 4) + 1;
 					if (_server_commands.find(key) == _server_commands.end()) {
-						std::cout << "Unknown Server Command : " << key << '\n';
+						dbgout("Unknown Server Command --- ", key);
 					}
 					else {
 						(this->*_server_commands.at(ptr + 4))(static_cast<void*>(ptr + command_length + 4), packet_length - command_length - 4);
@@ -208,10 +210,10 @@ void Server::s_recieve(std::shared_ptr<ServerClient> client) {
 			}
 		}
 		else if (r_recv == 0) {
-			std::cout << "Close Connection" << '\n';
+			fmtout("Close Connection");
 		}
 		else {
-			std::cout << "Recv Error : " << WSAGetLastError() << '\n';
+			fmtout("Recv Error --- ", WSAGetLastError());
 		}
 	} while (r_recv > 0);
 
@@ -245,9 +247,9 @@ bool Server::s_send(const char* data, int* len, int client_id) {
 	int bytes_left = *len;
 	while (total < bytes_left) {
 		int r_send = send(client->_client_socket, data + total, bytes_left, 0);
-		std::cout << "send Result: " << r_send << '\n';
+		dbgout("Sending...", r_send);
 		if (r_send == SOCKET_ERROR) {
-			std::cout << "Send Error: " << WSAGetLastError() << '\n';
+			dbgout("Send Error --- ", WSAGetLastError());
 			return false;
 		}
 
@@ -285,8 +287,15 @@ void Server::load_world_server_to_client(void* buf, int size) {
 	}
 }
 
+// Params: int client_id, Entity entity
 void Server::new_entity(void* buf, int size) {
+	/*
+	std::shared_ptr<Entity> entity = std::make_shared<Entity>();
 
+	entity->load_buffer(buf, size);
+
+	_entities.push_back(entity);
+	*/
 }
 
 void Server::move_entity(void* buf, int size) {

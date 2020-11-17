@@ -221,5 +221,8 @@
     <ClInclude Include="src\Network\Packet.h">
       <Filter>Header Files\Network</Filter>
     </ClInclude>
+    <ClInclude Include="src\Network\Fmtout.h">
+      <Filter>Header Files\Network</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

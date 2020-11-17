@@ -26,6 +26,7 @@ public:
 	double get_fms();
 
 	std::string get_display_time();
+	std::string get_system_time();
 private:
 	int _limit;
 	double _frames;

@@ -181,6 +181,7 @@
     <ClInclude Include="src\Entities\Components\TransformComponent.h" />
     <ClInclude Include="src\Entities\Entity.h" />
     <ClInclude Include="src\Network\Client.h" />
+    <ClInclude Include="src\Network\Fmtout.h" />
     <ClInclude Include="src\Network\Packet.h" />
     <ClInclude Include="src\Network\Server.h" />
     <ClInclude Include="src\Resources\Camera.h" />

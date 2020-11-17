@@ -4,6 +4,7 @@
 
 #include <Windows.h>
 #include <GLFW/glfw3.h>
+#include <ctime>
 
 #define FILE_CLOCK_FPS "i_clock_fps"
 
@@ -103,4 +104,15 @@ std::string Clock::get_display_time() {
 	time += std::to_string((int)miliseconds);
 
 	return time;
+}
+
+std::string Clock::get_system_time() {
+	time_t sys_time = time(NULL);
+	std::string str;
+	str.resize(26);
+	ctime_s(&str[0], str.size(), &sys_time);
+
+	str.resize(str.find('\n'));
+
+	return str;
 }
