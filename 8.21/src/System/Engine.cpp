@@ -47,7 +47,7 @@ Engine::Engine() :
 		// wait
 	}
 
-	client->load_world_server();
+	client->s_load_world_server();
 }
 
 Engine::~Engine() {

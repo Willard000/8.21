@@ -186,6 +186,10 @@ std::string_view Entity::get_name() {
 	return _name;
 }
 
+void Entity::set_unique_id(int id) {
+	_unique_id = id;
+}
+
 void Entity::set_model_id(const int model_id) {
 	_model_id = model_id;
 }

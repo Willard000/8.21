@@ -6,6 +6,8 @@
 #include "../src/System/ResourceManager.h"
 #include "../src/System/GUIManager.h"
 
+#include "../src/Network/Client.h"
+
 #include "../src/Resources/Terrain.h"
 #include "../src/Entities/Entity.h"
 
@@ -37,10 +39,10 @@ std::shared_ptr<Entity> select_entity(float xpos, float ypos) {
 	std::cout << "select_entity" << '\n';
 	std::cout << pos.x << " " << pos.y << " " << pos.z << '\n';
 	for(const auto& e : *entities) {
-		if(const auto& transform = e->get<TransformComponent>()) {
+		if(const auto& transform = e.second->get<TransformComponent>()) {
 			if(xz_collision(rect, transform->get_collision_box())) {
-				std::cout << e->get_name() << '\n';
-				return e;
+				std::cout << e.second->get_name() << '\n';
+				return e.second;
 			}
 		}
 	}
@@ -514,9 +516,9 @@ void EntitySelection::select_all(glm::vec2 first, glm::vec2 last) {
 	const auto entities = Environment::get().get_resource_manager()->get_entities();
 	_entities.clear();
 	for(const auto& e : *entities) {
-		if(const auto& transform = e->get<TransformComponent>()) {
+		if(const auto& transform = e.second->get<TransformComponent>()) {
 			if(xz_collision(selection_rect, transform->get_collision_box())) {
-				_entities.push_back(e);
+				_entities.push_back(e.second);
 			}
 		}
 	}
@@ -532,7 +534,13 @@ void EntitySelection::move_all(double xpos, double ypos) {
 
 	for(auto& e : _entities) {
 		if(const auto& transform = e->get<TransformComponent>()) {
-			transform->set_destination(glm::vec3(dest.x, 0, dest.z));
+			glm::vec3 dest(dest.x, 0, dest.z);
+			//transform->set_destination(dest);
+
+			auto client = Environment::get().get_client();
+			PacketData data("set_destination", client->get_id(), e->get_unique_id(), dest);
+			int len = data.length();
+			client->c_send(data.c_str(), &len);
 		}
 	}
 }

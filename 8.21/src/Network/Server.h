@@ -21,12 +21,15 @@ class WorldServer {
 public:
 	WorldServer();
 
+	void update();
+
 	void load();
 
 protected:
 	int _map_id;
 
-	std::vector<std::shared_ptr<Entity>> _entities;
+	//std::vector<std::shared_ptr<Entity>> _entities;
+	std::unordered_map<int, std::shared_ptr<Entity>> _entities;
 
 	Environment _environment;
 };
@@ -52,7 +55,7 @@ public:
 	void load_server_commands();
 	void load_world_server_to_client(void* buf, int size);
 	void new_entity(void* buf, int size);
-	void move_entity(void* buf, int size);
+	void set_destination(void* buf, int size);
 private:
 	bool _accept;
 	bool _started;

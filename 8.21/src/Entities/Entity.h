@@ -73,6 +73,7 @@ public:
 	bool get_destroy();
 	bool get_draw();
 
+	void set_unique_id(int unique_id);
 	void set_model_id(const int model_id);
 	void set_name(const std::string_view name);
 	void set_draw(bool draw);

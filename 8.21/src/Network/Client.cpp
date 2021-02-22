@@ -151,16 +151,29 @@ bool Client::c_connected() {
 	return _connect_socket == INVALID_SOCKET;
 }
 
-void Client::load_world_server() {
+void Client::s_load_world_server() {
 	PacketData packet("load_world_server", _id);
 	int len = packet.length();
 
 	c_send(packet.c_str(), &len);
 }
 
+void Client::s_new_entity(std::shared_ptr<Entity> entity) {
+	PacketData packet("new_entity", _id);
+
+	auto packet_vector = entity->packet_data();
+	for(auto& p : packet_vector) {
+		packet.add(std::move(p));
+	}
+
+	int len = packet.length();
+	c_send(packet.c_str(), &len);
+}
+
 void Client::load_client_commands() {
 	_client_commands.emplace("set_id", &Client::set_id);
 	_client_commands.emplace("load_entity", &Client::load_entity);
+	_client_commands.emplace("set_destination", &Client::set_destination);
 }
 
 void Client::set_id(void* buf, int size) {
@@ -175,8 +188,29 @@ void Client::load_entity(void* buf, int size) {
 	std::shared_ptr<Entity> entity = std::make_shared<Entity>();
 
 	entity->load_buffer(buf, size);
+
+	std::cout << "UNIQUE ID" << entity->get_unique_id() << '\n';
 	
 	Environment::get().get_resource_manager()->add_entity(entity);
+}
+
+void Client::set_destination(void* buf, int size) {
+	int entity_id;
+	memcpy(&entity_id, buf, sizeof(int));
+
+	char* ptr = static_cast<char*>(buf);
+	ptr = ptr + 4;
+
+	glm::vec3 destination;
+	memcpy(&destination, ptr, sizeof(glm::vec3));
+
+	auto entities = Environment::get().get_resource_manager()->get_entities();
+
+	if(!entities->count(entity_id)) {
+		assert(NULL);
+	}
+
+	entities->at(entity_id)->get<TransformComponent>()->set_destination(destination);
 }
 
 int Client::get_id() {

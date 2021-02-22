@@ -3,6 +3,7 @@
 
 #include <array>
 #include <vector>
+#include <unordered_map>
 #include <map>
 #include <string>
 
@@ -102,9 +103,10 @@ public:
 
 	void remove_entity(std::shared_ptr<Entity> entity);
 
-	std::vector<std::shared_ptr<Entity>>* get_entities();
+	std::unordered_map<int, std::shared_ptr<Entity>>* get_entities();
 protected:
-	std::vector<std::shared_ptr<Entity>> _entities;
+	//std::vector<std::shared_ptr<Entity>> _entities;
+	std::unordered_map<int, std::shared_ptr<Entity>> _entities;
 
 	// <Type, <ID, Entity>>
 	std::map<std::string, std::map<unsigned int, std::shared_ptr<Entity>>> _default_entities;

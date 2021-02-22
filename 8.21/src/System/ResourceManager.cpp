@@ -8,6 +8,8 @@
 #include "../src/Resources/Window.h"
 #include "../src/Resources/Camera.h"
 
+#include "../src/Network/Client.h"
+
 #include "../src/Resources/Terrain.h"
 #include "../src/Entities/Entity.h"
 
@@ -233,12 +235,12 @@ void EntityManager::load_default_entities() {
 void EntityManager::update() {
 	auto it = _entities.begin();
 	while (it != _entities.end()) {
-		if ((*it)->get_destroy()) {
+		if ((it->second)->get_destroy()) {
 			it = _entities.erase(it);
 			continue;
 		}
 
-		(*it)->update();
+		(it->second)->update();
 		++it;
 	}
 }
@@ -249,8 +251,8 @@ void EntityManager::save_entities(std::string_view folder) {
 
 	for(const auto& e : _entities) {
 		std::ofstream file;
-		file.open(folder.data() + std::to_string(e->get_unique_id()) + ".txt", std::ios::in | std::ios::trunc);
-		e->save(file);
+		file.open(folder.data() + std::to_string(e.second->get_unique_id()) + ".txt", std::ios::in | std::ios::trunc);
+		e.second->save(file);
 	}
 }
 
@@ -258,13 +260,16 @@ void EntityManager::load_entities() {
 	for(auto& p : std::filesystem::directory_iterator("Data\\Map\\Entities")) {
 		auto entity = std::make_shared<Entity>();
 		entity->load(p.path().string());
-		_entities.push_back(entity);
+		_entities.insert({ entity->get_unique_id(), entity });
 	}
 }
 
 void EntityManager::add_entity(std::shared_ptr<Entity> entity) {
 	std::lock_guard<std::mutex> lock(_em_mutex);
-	_entities.push_back(entity);
+	if(_entities.count(entity->get_unique_id())) {
+		assert(NULL);
+	}
+	_entities.insert({ entity->get_unique_id(), entity });
 }
 
 std::shared_ptr<Entity> EntityManager::new_entity(std::string_view type, int id) {
@@ -273,7 +278,9 @@ std::shared_ptr<Entity> EntityManager::new_entity(std::string_view type, int id)
 	const auto new_entity = std::make_shared<Entity>(*default_entity);
 	new_entity->copy(*default_entity);
 
-	_entities.push_back(new_entity);
+	Environment::get().get_client()->s_new_entity(new_entity); // send to server
+
+	//_entities.insert({ new_entity->get_unique_id(), new_entity });
 
 	return new_entity;
 }
@@ -281,7 +288,7 @@ std::shared_ptr<Entity> EntityManager::new_entity(std::string_view type, int id)
 void EntityManager::remove_entity(std::shared_ptr<Entity> entity) {
 	std::lock_guard<std::mutex> lock(_em_mutex);
 	for(auto it = _entities.begin(); it != _entities.end(); ++it) {
-		if((*it) == entity) {
+		if((it->second) == entity) {
 			_entities.erase(it);
 			return;
 		}
@@ -293,7 +300,7 @@ std::shared_ptr<Entity> EntityManager::get_default_entity(std::string_view type,
 	return _default_entities.at(type.data()).at(id);
 }
 
-std::vector<std::shared_ptr<Entity>>* EntityManager::get_entities() {
+std::unordered_map<int, std::shared_ptr<Entity>>* EntityManager::get_entities() {
 	return &_entities;
 }
 
@@ -326,8 +333,8 @@ void ResourceManager::draw() {
 
 	std::lock_guard<std::mutex> lock(_em_mutex);
 	for(const auto entity : _entities) {
-		if (const auto transform = entity->get<TransformComponent>()) {
-			_models.at(entity->get_model_id())->draw(transform->_transform);
+		if (const auto transform = entity.second->get<TransformComponent>()) {
+			_models.at(entity.second->get_model_id())->draw(transform->_transform);
 		}
 	}
 }

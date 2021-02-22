@@ -86,6 +86,7 @@ std::shared_ptr<Component> TransformComponent::copy(std::shared_ptr<Entity> new_
 }
 
 void TransformComponent::update() {
+
 	if(!_dest_reached) {
 		move(_destination - _transform.get_position());
 	}

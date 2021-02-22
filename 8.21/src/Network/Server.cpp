@@ -53,6 +53,12 @@ WorldServer::WorldServer() :
 	resource_manager->load_resources(1, 0, 1, 1, 0);
 }
 
+void WorldServer::update() {
+	for(auto it : _entities) {
+		it.second->update();
+	}
+}
+
 void WorldServer::load() {
 	// send map id
 
@@ -61,7 +67,7 @@ void WorldServer::load() {
 	for (auto& p : std::filesystem::directory_iterator("Data\\Map\\Entities")) {
 		auto entity = std::make_shared<Entity>();
 		entity->load(p.path().string());
-		_entities.push_back(entity);
+		_entities.insert({ entity->get_unique_id(), entity });
 	}
 }
 
@@ -264,6 +270,8 @@ bool Server::s_send(const char* data, int* len, int client_id) {
 
 void Server::load_server_commands() {
 	_server_commands.emplace("load_world_server", &Server::load_world_server_to_client);
+	_server_commands.emplace("new_entity", &Server::new_entity);
+	_server_commands.emplace("set_destination", &Server::set_destination);
 }
 
 // Params: int client_id
@@ -275,7 +283,7 @@ void Server::load_world_server_to_client(void* buf, int size) {
 	assert(_clients.size() >= client_id);
 
 	for(const auto e : _entities) {
-		auto packet_data_vec = e->packet_data();
+		auto packet_data_vec = e.second->packet_data();
 		PacketData packet("load_entity");
 
 		for(auto& p : packet_data_vec) {
@@ -289,17 +297,66 @@ void Server::load_world_server_to_client(void* buf, int size) {
 
 // Params: int client_id, Entity entity
 void Server::new_entity(void* buf, int size) {
-	/*
+	assert(size >= sizeof(int));
+	int client_id;
+	memcpy(&client_id, buf, sizeof(int));
+
+	assert(_clients.size() >= client_id);
+
+	char* ptr = static_cast<char*>(buf);
+	ptr = ptr + 4;
+	size -= 4;
+
 	std::shared_ptr<Entity> entity = std::make_shared<Entity>();
 
-	entity->load_buffer(buf, size);
+	int unique_id = entity->get_unique_id();
+	entity->load_buffer(static_cast<void*>(ptr), size);
+	entity->set_unique_id(unique_id);
 
-	_entities.push_back(entity);
-	*/
+	_entities.insert({ entity->get_unique_id(), entity });
+
+	std::cout << "UNIQUE ID: " << entity->get_unique_id() << '\n';
+	
+	PacketData packet("load_entity");
+	auto packet_vector = entity->packet_data();
+	for(auto& p : packet_vector) {
+		packet.add(std::move(p));
+	}
+
+	for(const auto client : _clients) {
+		int len = packet.length();
+		s_send(packet.c_str(), &len, client->_id);
+	}
 }
 
-void Server::move_entity(void* buf, int size) {
+// int client id, int entity_id, vec3 destination
+void Server::set_destination(void* buf, int size) {
+	// verify bytes
+	char* ptr = static_cast<char*>(buf);
 
+	int client_id;
+	memcpy(&client_id, ptr, sizeof(int));
+
+	assert(_clients.size() >= client_id);
+
+	int entity_id;
+	memcpy(&entity_id, ptr + 4, sizeof(int));
+
+	glm::vec3 destination;
+	memcpy(&destination, ptr + 8, sizeof(glm::vec3));
+
+	if(!_entities.count(entity_id)) {
+		return;
+	}
+
+	_entities.at(entity_id)->get<TransformComponent>()->set_destination(destination);
+
+	PacketData data("set_destination", entity_id, destination);
+
+	for(auto& client : _clients) {
+		int len = data.length();
+		s_send(data.c_str(), &len, client->_id);
+	}
 }
 
 /********************************************************************************************************************************************************/

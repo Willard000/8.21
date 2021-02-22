@@ -12,6 +12,7 @@
 #include <string_view>
 
 class Client;
+class Entity;
 
 typedef void(Client::*ClientCommand)(void* buf, int size);
 
@@ -28,10 +29,12 @@ public:
 
 	void load_client_commands();
 
+	void s_load_world_server();
+	void s_new_entity(std::shared_ptr<Entity> entity);
 
-	void load_world_server();
 	void set_id(void* buf, int size);
 	void load_entity(void* buf, int size);
+	void set_destination(void* buf, int size);
 
 	int get_id();
 private:
